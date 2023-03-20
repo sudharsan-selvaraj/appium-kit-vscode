@@ -1,0 +1,76 @@
+drivers:
+  xcuitest:
+    pkgName: appium-xcuitest-driver
+    version: 4.19.1
+    installType: npm
+    installSpec: xcuitest
+    installPath: /Users/sudharsanselvaraj/.appium/node_modules/appium-xcuitest-driver
+    appiumVersion: ^2.0.0-beta.40
+    automationName: XCUITest
+    platformNames:
+      - iOS
+      - tvOS
+    mainClass: XCUITestDriver
+    scripts:
+      build-wda: ./scripts/build-wda.js
+      open-wda: ./scripts/open-wda.js
+    schema:
+      $schema: http://json-schema.org/draft-07/schema
+      type: object
+      properties:
+        webdriveragent-port:
+          appiumCliDest: wdaLocalPort
+          default: 8100
+          description: Local port used for communication with WebDriverAgent
+          maximum: 65535
+          minimum: 1
+          type: integer
+      additionalProperties: false
+      title: XCUITest Driver Configuration
+      description: Appium configuration schema for the XCUITest driver.
+plugins:
+  appium-dashboard:
+    pkgName: appium-dashboard
+    version: v2.0.2
+    installType: npm
+    installSpec: appium-dashboard
+    installPath: /Users/sudharsanselvaraj/.appium/node_modules/appium-dashboard
+    appiumVersion: ^2.0.0-beta.46
+    mainClass: AppiumDashboardPlugin
+  device-farm:
+    pkgName: appium-device-farm
+    version: 5.4.0
+    installType: npm
+    installSpec: appium-device-farm
+    installPath: /Users/sudharsanselvaraj/.appium/node_modules/appium-device-farm
+    appiumVersion: ^2.0.0-beta.44
+    mainClass: DevicePlugin
+    schema:
+      $schema: http://json-schema.org/draft-07/schema
+      additionalProperties: false
+      description: Appium configuration schema for the Device Farm plugin.
+      properties:
+        platform:
+          type: string
+        androidDeviceType:
+          type: string
+          default: both
+        iosDeviceType:
+          type: string
+          default: both
+        hub:
+          type: string
+        adbRemote:
+          type: array
+        skipChromeDownload:
+          type: boolean
+        maxSessions:
+          type: number
+        cloud:
+          type: object
+        derivedDataPath:
+          type: object
+      title: Appium device farm plugin
+      type: object
+      $id: plugin-device-farm.json
+schemaRev: 3
