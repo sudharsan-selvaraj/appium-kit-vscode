@@ -1,0 +1,27 @@
+<div class="container">
+  <div class="section flex-column" id="loading" style="display: none">
+    <div>
+      <i class="codicon codicon-sync codicon-modifier-spin"></i>Seting up
+      appium... please wait
+    </div>
+  </div>
+  <div class="section flex-column" id="appium-not-found" style="display: none">
+    <div class="card flex-columntext-center">
+      <div class="content">
+        Unable to find any installed appium with version 2 on the machine.
+      </div>
+    </div>
+    <div class="flex-row">
+      <vscode-button id="refresh-button">Refresh</vscode-button>
+    </div>
+  </div>
+  <div
+    class="section flex-column"
+    id="configure-appium-path"
+    style="display: none"
+  >
+    <div class="card flex-columntext-center">
+      <div class="content">Configure appium path</div>
+    </div>
+  </div>
+</div>

@@ -17,7 +17,7 @@
         {
           "id": "appium.welcome",
           "type": "webview",
-          "name": "Appium Server"
+          "name": "Welcome"
         }
       ]
     },
@@ -29,6 +29,15 @@
           "icon": "media/logo.svg"
         }
       ]
+    },
+    "configuration": {
+      "title": "Appium",
+      "properties": {
+        "appium.appiumPath": {
+          "type": "string",
+          "description": "Path for the appium executable"
+        }
+      }
     }
   },
   "scripts": {
@@ -45,9 +54,13 @@
   "devDependencies": {
     "@types/common-tags": "^1.8.1",
     "@types/glob": "^8.1.0",
+    "@types/lodash": "^4.14.191",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
+    "@types/semver": "^7.3.13",
+    "@types/teen_process": "^2.0.0",
     "@types/vscode": "^1.76.0",
+    "@types/which": "^2.0.2",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
     "@vscode/test-electron": "^2.2.3",
@@ -64,6 +77,9 @@
     "@bendera/vscode-webview-elements": "^0.12.0",
     "@vscode/codicons": "^0.0.32",
     "common-tags": "^1.8.2",
+    "lodash": "^4.17.21",
+    "semver": "^7.3.8",
+    "teen_process": "^2.0.2",
     "which": "^3.0.0"
   }
 }

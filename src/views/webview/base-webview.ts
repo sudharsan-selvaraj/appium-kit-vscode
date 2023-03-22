@@ -8,6 +8,7 @@ import {
   ExtensionContext,
 } from 'vscode';
 import { html, safeHtml } from 'common-tags';
+import { readFileSync } from 'fs';
 
 const getNonce = () => {
   let text = '';
@@ -28,6 +29,7 @@ const assetUri = (
 export abstract class BaseWebView implements WebviewViewProvider {
   constructor(
     private context: ExtensionContext,
+    private componentName: string,
     private jsAssets: Array<string>,
     private cssAssets: Array<string>
   ) {}
@@ -37,6 +39,8 @@ export abstract class BaseWebView implements WebviewViewProvider {
     context: WebviewViewResolveContext<unknown>,
     token: CancellationToken
   ): void | Thenable<void> {
+    this.onViewLoaded(webviewView.webview);
+
     const { cspSource } = webviewView.webview;
     const nonce = getNonce();
     const { webview } = webviewView;
@@ -58,23 +62,10 @@ export abstract class BaseWebView implements WebviewViewProvider {
       'dist',
       'codicon.css'
     );
-    const jsFiles = assetUri(
-      webview,
-      this.context,
-      'media',
-      'js',
-      'welcome-webview.js'
-    );
 
-    const cssFiles = assetUri(
-      webview,
-      this.context,
-      'media',
-      'css',
-      'main.css'
-    );
+    const body =
+      this.getWebViewHtml(webview) || this.getTemplateFromFile(webview);
 
-    const body = this.getWebViewHtml(webviewView.webview);
     const webviewHtml = html`
       <!DOCTYPE html>
       <html lang="en">
@@ -118,11 +109,31 @@ export abstract class BaseWebView implements WebviewViewProvider {
     webviewView.webview.html = webviewHtml;
   }
 
-  abstract getWebViewHtml(webview: Webview): string;
+  getAssetUri(webview: Webview, fileName: string) {
+    return assetUri(
+      webview,
+      this.context,
+      'components',
+      this.componentName,
+      fileName
+    );
+  }
+
+  getTemplateFromFile(webview: Webview) {
+    const uri = this.getAssetUri(webview, 'template.html');
+    return readFileSync(uri.fsPath, { encoding: 'utf-8' });
+  }
 
   getCssFile(nonce: string, webview: Webview) {
-    return ['main.css', ...this.cssAssets].map((f) => {
-      const uri = assetUri(webview, this.context, 'media', 'css', f);
+    const defaultCssFiles = ['main.css'].map((file) =>
+      assetUri(webview, this.context, 'components', 'css', file)
+    );
+
+    const templateCssFiles = this.cssAssets.map((cssFile) => {
+      this.getAssetUri(webview, cssFile);
+    });
+
+    return [defaultCssFiles, templateCssFiles].map((uri) => {
       return safeHtml` <link
        rel="stylesheet"
        href="${uri}"
@@ -133,9 +144,14 @@ export abstract class BaseWebView implements WebviewViewProvider {
   }
 
   getJsFile(nonce: string, webview: Webview) {
-    return this.jsAssets.map((f) => {
-      const uri = assetUri(webview, this.context, 'media', 'js', f);
-      return safeHtml`<script src="${uri}" nonce="${nonce}"></script>`;
+    return this.jsAssets.map((jsFile) => {
+      return safeHtml`<script src="${this.getAssetUri(
+        webview,
+        jsFile
+      )}" nonce="${nonce}"></script>`;
     });
   }
+
+  abstract getWebViewHtml(webview: Webview): string | null;
+  abstract onViewLoaded(webview: Webview): void;
 }
