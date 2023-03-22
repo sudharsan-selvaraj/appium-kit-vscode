@@ -5,8 +5,9 @@ import _ = require('lodash');
 import { Config } from '../../config';
 import { Context } from '../../context';
 import { Appium } from '../../appium';
+import { ViewProvider } from '../view-provider';
 
-export class WelcomeWebview extends BaseWebView {
+export class WelcomeWebview extends BaseWebView implements ViewProvider {
   public static readonly jsFiles = ['welcome-webview.js'];
   private webview!: vscode.Webview;
   private _config: Config;
@@ -18,26 +19,62 @@ export class WelcomeWebview extends BaseWebView {
     this._context = new Context();
   }
 
-  async checkForAppium() {
-    const appiumPathInConfig = this._config.appiumPath();
-    const appiumLocalPath = Appium.getAppiumInstallationPath();
+  async register(viewId: string, context: ExtensionContext): Promise<void> {
+    vscode.window.registerWebviewViewProvider(viewId, this);
+  }
 
-    if ([appiumPathInConfig, appiumLocalPath].every(_.isNull)) {
+  dispose() {
+    //no action required
+  }
+
+  async updateView(section: string, data: any) {
+    this.webview.postMessage({
+      type: 'update_view',
+      section: section,
+      data,
+    });
+  }
+
+  async showLoadingView(message?: string) {
+    this.updateView('loading', { message: message });
+  }
+
+  async checkForAppium() {
+    const appiumPathInConfig = this._config.getAppiumPath();
+    if (!!appiumPathInConfig) {
+      this.showLoadingView('Found appium executable in configuration');
+    }
+    const appiumLocalPath = Appium.getAppiumInstallationPath();
+    if (!!appiumLocalPath) {
+      this.showLoadingView('Found locally installed appium executable');
+    }
+    if ([appiumPathInConfig, appiumLocalPath].every(_.isEmpty)) {
       this.webview.postMessage({
         type: 'update_view',
         section: 'appiumNotFound',
       });
-    } else if (!_.isNull(appiumPathInConfig)) {
+    } else if (!_.isEmpty(appiumPathInConfig)) {
+      if (!!this.context.globalState.get('isAppiumConfigured', false)) {
+        return this._context.appiumPathUpdated();
+      }
+
+      this.showLoadingView(
+        'Fetching the version of appium from configuration... '
+      );
       const appiumDetails = await this.getAppiumDetails(appiumPathInConfig);
+
       if (_.isNil(appiumDetails)) {
         this.webview.postMessage({
           type: 'update_view',
           section: 'appiumNotFound',
         });
       } else {
-        this._context.appiumPathUpdated();
+        this.onAppiumConfigured();
       }
-    } else if (!_.isNil(appiumLocalPath)) {
+    } else if (!_.isEmpty(appiumLocalPath)) {
+      this.showLoadingView(
+        'Fetching the version of globally installed appium... '
+      );
       const appiumDetails = await this.getAppiumDetails(appiumLocalPath);
       if (_.isNil(appiumDetails)) {
         this.webview.postMessage({
@@ -52,6 +89,11 @@ export class WelcomeWebview extends BaseWebView {
         });
       }
     }
+  }
+
+  async onAppiumConfigured() {
+    this.context.globalState.update('isAppiumConfigured', true);
+    this._context.appiumPathUpdated();
   }
 
   async getAppiumDetails(appiumPath: string) {
@@ -70,11 +112,19 @@ export class WelcomeWebview extends BaseWebView {
       switch (event.type) {
         case 'ready':
         case 'refresh':
-          this.webview.postMessage({ type: 'update_view', section: 'loading' });
+          this.showLoadingView();
           await this.checkForAppium();
+          break;
+        case 'save-appium-path':
+          this.updateAppiumPathInSettings(event.data.path);
           break;
       }
     });
+  }
+
+  updateAppiumPathInSettings(path: string) {
+    this._config.setAppiumPath(path);
+    this._context.appiumPathUpdated();
   }
 
   getWebViewHtml(webview: Webview) {

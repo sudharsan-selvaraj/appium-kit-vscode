@@ -11,13 +11,29 @@
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
+  "activationevents": [
+    "workspaceContains:**/*{appiumrc.{json,yaml,yml,js,cjs}, appium.config.{js,cjs}, appiumrc}"
+  ],
   "contributes": {
     "views": {
       "appium": [
         {
-          "id": "appium.welcome",
+          "id": "appium.configure",
           "type": "webview",
-          "name": "Welcome"
+          "name": "Configure Appium",
+          "when": "appium.pathUpdated == false"
+        },
+        {
+          "id": "appium.configFiles",
+          "type": "tree",
+          "name": "Config Files",
+          "when": "appium.pathUpdated == true && appium.available == true"
+        },
+        {
+          "id": "appium.environment",
+          "type": "webview",
+          "name": "Appium Environment",
+          "when": "appium.pathUpdated == true && appium.available == true"
         }
       ]
     },
@@ -70,7 +86,8 @@
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",
     "webpack": "^5.75.0",
-    "webpack-cli": "^5.0.1"
+    "webpack-cli": "^5.0.1",
+    "yml": "^1.0.0"
   },
   "dependencies": {
     "@appium/support": "^3.1.7",
@@ -80,6 +97,7 @@
     "lodash": "^4.17.21",
     "semver": "^7.3.8",
     "teen_process": "^2.0.2",
-    "which": "^3.0.0"
+    "which": "^3.0.0",
+    "yaml": "^2.2.1"
   }
 }

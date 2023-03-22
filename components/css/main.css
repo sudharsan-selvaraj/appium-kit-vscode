@@ -44,3 +44,38 @@ html {
 .text-center {
   text-align: center;
 }
+
+.md-code {
+  background-color: var(--vscode-welcomePage-tileBackground);
+  padding: 4px;
+  font-weight: 600;
+  word-break: break-all;
+  border-radius: 10%;
+}
+
+.break-word {
+  word-break: break-all;
+}
+
+.line-height-1_5 {
+  line-height: 1.5;
+}
+
+.link-blue {
+  color: var(--vscode-textLink-foreground);
+}
+
+.full-width,
+.grouped-button,
+.section {
+  width: 100%;
+}
+
+.margin-5 {
+  margin: 5px;
+}
+
+.note {
+  font-weight: 300;
+  font-size: 12px;
+}

@@ -12,7 +12,7 @@ export class Appium {
       const appiumPath = which(APPIUM_BINARY);
       return appiumPath;
     } catch (err) {
-      return null;
+      return '';
     }
   }
 

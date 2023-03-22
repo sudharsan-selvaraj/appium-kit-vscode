@@ -28,7 +28,7 @@ const assetUri = (
 
 export abstract class BaseWebView implements WebviewViewProvider {
   constructor(
-    private context: ExtensionContext,
+    protected context: ExtensionContext,
     private componentName: string,
     private jsAssets: Array<string>,
     private cssAssets: Array<string>

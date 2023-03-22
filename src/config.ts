@@ -3,8 +3,12 @@ import * as vscode from 'vscode';
 export class Config {
   constructor(private prefix: string = 'appium') {}
 
-  appiumPath() {
-    return this.getOrDefault<string | null>('appiumPath', null);
+  getAppiumPath() {
+    return this.getOrDefault<string>('appiumPath', '');
+  }
+
+  setAppiumPath(path: string) {
+    return this.set('appiumPath', path);
   }
 
   get<T>(key: string): T {
