@@ -23,6 +23,7 @@ export class AppiumEnvironment extends BaseWebView {
   }
 
   getWebViewHtml(webview: Webview) {
-    return `<h1>This is appium Environment</h1>`;
+    return '<h1>Appium Environment</h1>';
+    //return `<iframe height="100%" width="100%" src="https://inspector.appiumpro.com"/>`;
   }
 }

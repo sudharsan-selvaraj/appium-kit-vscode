@@ -13,12 +13,15 @@
   >
     <div class="card flex-column gap-5">
       <div class="content">
-        The appium version <span id="appium-source"></span> is unsupported.
+        The appium version <span id="appium-source"></span> is not supported.
         Required appium version is
         <span id="required-appium-version" class="link-blue"></span>
         and actual version installed is
         <span id="actual-appium-version" class="link-blue"></span>
       </div>
+    </div>
+    <div class="note margin-5">
+      Update the appium version and click refresh to continue.
     </div>
     <vscode-button class="flex-row full-width refresh-button">
       <span class="flex-row gap-5"
@@ -37,6 +40,9 @@
         Install the latest version via npm and refresh again.
         <div class="md-code">npm install -g appium@next</div>
       </div>
+    </div>
+    <div class="note margin-5">
+      Click on the refresh button after installing the appium
     </div>
     <div class="flex-row full-width">
       <vscode-button class="full-width refresh-button">

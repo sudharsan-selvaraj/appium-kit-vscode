@@ -79,7 +79,6 @@ export abstract class BaseWebView implements WebviewViewProvider {
           <meta
             http-equiv="Content-Security-Policy"
             content="
-        default-src 'none'; 
         img-src ${cspSource};
         script-src ${cspSource}
         nonce-${nonce}; 
