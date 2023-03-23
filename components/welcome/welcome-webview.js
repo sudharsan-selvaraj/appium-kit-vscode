@@ -1,6 +1,6 @@
 (function () {
   const vscode = acquireVsCodeApi();
-  const state = null; //vscode.getState();
+  const state = null;
 
   let activeSection = null;
   const sections = {
@@ -12,8 +12,21 @@
         }
       },
     },
-    invalidAppiumExecutable: {
-      id: 'appium-not-found',
+    appiumVersionNotSupported: {
+      id: 'appium-version-not-supported',
+      onUpdate: (data) => {
+        if (data) {
+          const source =
+            data.source === 'config'
+              ? 'configurated in the settings'
+              : 'installed on the machine';
+          document.getElementById('appium-source').textContent = source;
+          document.getElementById('required-appium-version').textContent =
+            data.requiredVersion;
+          document.getElementById('actual-appium-version').textContent =
+            data.version || 'unknown';
+        }
+      },
     },
     appiumNotFound: {
       id: 'appium-not-found',
@@ -29,27 +42,26 @@
     },
   };
 
-  function hideAllSection() {
+  function hideAllSections() {
     Object.values(sections).forEach(
       (section) => (document.getElementById(section.id).style.display = 'none')
     );
   }
 
   function unHideSection(sectionId) {
-    console.log('Unhiding section: ', sectionId);
     activeSection = sectionId;
-    document.getElementById(sections[sectionId].id).style.display = 'block';
+    document.getElementById(sections[sectionId].id).style.display = 'flex';
   }
 
   function initialize() {
-    if (!!state) {
+    if (!!state && !!state.section) {
+      hideAllSections();
       if (typeof sections[state.section].onUpdate === 'function') {
         sections[state.section].onUpdate(state.data);
       }
       unHideSection(state.section);
-    } else {
-      vscode.postMessage({ type: 'ready' });
     }
+    vscode.postMessage({ type: 'ready' });
   }
 
   window.addEventListener('message', (message) => {
@@ -57,7 +69,7 @@
     switch (event.type) {
       case 'update_view':
         if (activeSection !== event.section) {
-          hideAllSection();
+          hideAllSections();
         }
         if (typeof sections[event.section].onUpdate === 'function') {
           sections[event.section].onUpdate(event.data);
@@ -72,25 +84,28 @@
   });
 
   document.addEventListener('DOMContentLoaded', () => {
-    initialize();
-
-    document
-      .getElementById('refresh-button')
-      .addEventListener('click', function () {
-        vscode.postMessage({ type: 'refresh' });
-      });
+    Array.from(document.getElementsByClassName('refresh-button')).forEach(
+      (ele) => {
+        ele.addEventListener('click', function () {
+          vscode.postMessage({ type: 'refresh' });
+        });
+      }
+    );
 
     document
       .getElementById('save-and-continue')
       .addEventListener('click', function () {
         const state = vscode.getState();
         if (state && state.data && state.section === 'configureAppiumPath') {
-          vscode.setState(null);
+          vscode.setState({});
           vscode.postMessage({
             type: 'save-appium-path',
             data: { path: state.data.path },
           });
+          console.log(vscode.getState());
         }
       });
   });
+
+  initialize();
 })();

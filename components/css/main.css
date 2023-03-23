@@ -33,7 +33,7 @@ html {
 
 .card {
   width: 100%;
-  background-color: var(--vscode-textCodeBlock-background);
+  background-color: var(--vscode-editor-background);
   color: var(--vscode-foreground);
 }
 
@@ -69,6 +69,7 @@ html {
 .grouped-button,
 .section {
   width: 100%;
+  overflow: hidden;
 }
 
 .margin-5 {

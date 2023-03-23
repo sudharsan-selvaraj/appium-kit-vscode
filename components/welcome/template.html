@@ -6,14 +6,44 @@
     </div>
     <p id="loader-message"></p>
   </div>
-  <div class="section flex-column" id="appium-not-found" style="display: none">
-    <div class="card flex-columntext-center">
+  <div
+    class="section flex-column gap-5"
+    id="appium-version-not-supported"
+    style="display: none"
+  >
+    <div class="card flex-column gap-5">
       <div class="content">
-        Unable to find any installed appium version 2 on the machine.
+        The appium version <span id="appium-source"></span> is unsupported.
+        Required appium version is
+        <span id="required-appium-version" class="link-blue"></span>
+        and actual version installed is
+        <span id="actual-appium-version" class="link-blue"></span>
       </div>
     </div>
-    <div class="flex-row">
-      <vscode-button id="refresh-button">Refresh</vscode-button>
+    <vscode-button class="flex-row full-width refresh-button">
+      <span class="flex-row gap-5"
+        ><i class="codicon codicon-sync"></i>Refresh</span
+      >
+    </vscode-button>
+  </div>
+  <div
+    class="section flex-column gap-5"
+    id="appium-not-found"
+    style="display: none"
+  >
+    <div class="card flex-column text-center">
+      <div class="content flex-column gap-5">
+        Unable to find any installed appium with version >=2.0.0 on the machine.
+        Install the latest version via npm and refresh again.
+        <div class="md-code">npm install -g appium@next</div>
+      </div>
+    </div>
+    <div class="flex-row full-width">
+      <vscode-button class="full-width refresh-button">
+        <span class="flex-row gap-5"
+          ><i class="codicon codicon-sync"></i>Refresh</span
+        >
+      </vscode-button>
     </div>
   </div>
   <div

@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import _ = require('lodash');
 import { Config } from '../../config';
 import { Context } from '../../context';
-import { Appium } from '../../appium';
+import { Appium, SUPPORTED_APPIUM_VERSION } from '../../appium';
 import { ViewProvider } from '../view-provider';
 
 export class WelcomeWebview extends BaseWebView implements ViewProvider {
@@ -21,6 +21,11 @@ export class WelcomeWebview extends BaseWebView implements ViewProvider {
 
   async register(viewId: string, context: ExtensionContext): Promise<void> {
     vscode.window.registerWebviewViewProvider(viewId, this);
+    vscode.workspace.onDidChangeConfiguration(async (event) => {
+      if (event.affectsConfiguration('appium.appiumPath')) {
+        await this.checkForAppium();
+      }
+    });
   }
 
   dispose() {
@@ -39,49 +44,43 @@ export class WelcomeWebview extends BaseWebView implements ViewProvider {
     this.updateView('loading', { message: message });
   }
 
+  async showAppiumNotSupportedView(data?: any) {
+    this.updateView('appiumVersionNotSupported', data);
+  }
+
   async checkForAppium() {
     const appiumPathInConfig = this._config.getAppiumPath();
-    if (!!appiumPathInConfig) {
-      this.showLoadingView('Found appium executable in configuration');
-    }
     const appiumLocalPath = Appium.getAppiumInstallationPath();
-    if (!!appiumLocalPath) {
-      this.showLoadingView('Found locally installed appium executable');
-    }
+
     if ([appiumPathInConfig, appiumLocalPath].every(_.isEmpty)) {
+      this.onAppiumNotConfigured();
       this.webview.postMessage({
         type: 'update_view',
         section: 'appiumNotFound',
       });
     } else if (!_.isEmpty(appiumPathInConfig)) {
-      if (!!this.context.globalState.get('isAppiumConfigured', false)) {
-        return this._context.appiumPathUpdated();
-      }
-
-      this.showLoadingView(
-        'Fetching the version of appium from configuration... '
-      );
       const appiumDetails = await this.getAppiumDetails(appiumPathInConfig);
-
-      if (_.isNil(appiumDetails)) {
-        this.webview.postMessage({
-          type: 'update_view',
-          section: 'appiumNotFound',
+      if (!appiumDetails.isSupported) {
+        this.onAppiumNotConfigured();
+        this.showAppiumNotSupportedView({
+          version: appiumDetails.version,
+          source: 'config',
+          requiredVersion: SUPPORTED_APPIUM_VERSION,
         });
       } else {
         this.onAppiumConfigured();
       }
     } else if (!_.isEmpty(appiumLocalPath)) {
-      this.showLoadingView(
-        'Fetching the version of globally installed appium... '
-      );
       const appiumDetails = await this.getAppiumDetails(appiumLocalPath);
-      if (_.isNil(appiumDetails)) {
-        this.webview.postMessage({
-          type: 'update_view',
-          section: 'appiumNotFound',
+      if (!appiumDetails.isSupported) {
+        this.onAppiumNotConfigured();
+        this.showAppiumNotSupportedView({
+          version: appiumDetails.version,
+          source: 'installed',
+          requiredVersion: SUPPORTED_APPIUM_VERSION,
         });
       } else {
+        this.onAppiumNotConfigured();
         this.webview.postMessage({
           type: 'update_view',
           section: 'configureAppiumPath',
@@ -92,8 +91,11 @@ export class WelcomeWebview extends BaseWebView implements ViewProvider {
   }
 
   async onAppiumConfigured() {
-    this.context.globalState.update('isAppiumConfigured', true);
     this._context.appiumPathUpdated();
+  }
+
+  async onAppiumNotConfigured() {
+    this._context.appiumNotAvailbale();
   }
 
   async getAppiumDetails(appiumPath: string) {
@@ -101,9 +103,12 @@ export class WelcomeWebview extends BaseWebView implements ViewProvider {
     const isVersionSupported = !!appiumVersion
       ? Appium.isVersionSupported(appiumVersion)
       : false;
-    return isVersionSupported
-      ? { version: appiumVersion, path: appiumPath }
-      : null;
+
+    return {
+      version: appiumVersion,
+      path: appiumPath,
+      isSupported: isVersionSupported,
+    };
   }
 
   onViewLoaded(webview: Webview) {
