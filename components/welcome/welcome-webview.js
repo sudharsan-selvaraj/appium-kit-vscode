@@ -1,6 +1,6 @@
 (function () {
   const vscode = acquireVsCodeApi();
-  const state = null;
+  const state = vscode.getState();
 
   let activeSection = null;
   const sections = {
@@ -17,10 +17,12 @@
       onUpdate: (data) => {
         if (data) {
           const source =
-            data.source === 'config'
+            data.source === 'settings'
               ? 'configurated in the settings'
               : 'installed on the machine';
           document.getElementById('appium-source').textContent = source;
+          document.getElementById('appium-path').textContent =
+            data.path || 'unknown';
           document.getElementById('required-appium-version').textContent =
             data.requiredVersion;
           document.getElementById('actual-appium-version').textContent =
@@ -30,15 +32,6 @@
     },
     appiumNotFound: {
       id: 'appium-not-found',
-    },
-    configureAppiumPath: {
-      id: 'configure-appium-path',
-      onUpdate: (data) => {
-        if (!!data) {
-          document.getElementById('appium-version').textContent = data.version;
-          document.getElementById('appium-path').textContent = data.path;
-        }
-      },
     },
   };
 
@@ -92,19 +85,9 @@
       }
     );
 
-    document
-      .getElementById('save-and-continue')
-      .addEventListener('click', function () {
-        const state = vscode.getState();
-        if (state && state.data && state.section === 'configureAppiumPath') {
-          vscode.setState({});
-          vscode.postMessage({
-            type: 'save-appium-path',
-            data: { path: state.data.path },
-          });
-          console.log(vscode.getState());
-        }
-      });
+    document.getElementById('open-settings').addEventListener('click', () => {
+      vscode.postMessage({ type: 'openSettings' });
+    });
   });
 
   initialize();

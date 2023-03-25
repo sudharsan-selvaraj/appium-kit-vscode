@@ -5,15 +5,37 @@ import {
   APPIUM_CONFIG_FILE_VIEW,
 } from './constants';
 import { AppiumEnvironment } from './views/webview/appium-environment';
-import { ConfigProvider } from './views/treeview/config-provider';
-import { ViewProvider } from './views/view-provider';
+import { ConfigViewProvider } from './views/treeview/config-provider';
+import { AppiumEnvironmentService } from './services/appium-environment';
+import { ConfigManager } from './vscode/config-manager';
+import { StateManager } from './vscode/state-manager';
+import { OpenSettingsCommand } from './commands/open-settings';
+import { CommandManager } from './vscode/command-manager';
 
 const disposables: vscode.Disposable[] = [];
 
-export async function activate(context: vscode.ExtensionContext) {
-  const welcomeViewProvider = new WelcomeWebview(context);
-  const configViewProvider = new ConfigProvider();
+function getCommands() {
+  return [new OpenSettingsCommand()];
+}
 
+export async function activate(context: vscode.ExtensionContext) {
+  const configManager = new ConfigManager();
+  const stateManager = new StateManager();
+
+  CommandManager.registerCommands(getCommands());
+  const appiumEnvironmentProvider = new AppiumEnvironmentService(
+    context,
+    configManager,
+    stateManager
+  );
+
+  const welcomeViewProvider = new WelcomeWebview(
+    context,
+    appiumEnvironmentProvider
+  );
+  const configViewProvider = new ConfigViewProvider();
+
+  /* Initialize Views */
   welcomeViewProvider.register(APPIUM_CONFIGURATION_VIEW, context);
   configViewProvider.register(APPIUM_CONFIG_FILE_VIEW, context);
 
@@ -23,6 +45,9 @@ export async function activate(context: vscode.ExtensionContext) {
       new AppiumEnvironment(context)
     )
   );
+
+  /* Initialize Services */
+  await appiumEnvironmentProvider.initialize();
 }
 
 export function deactivate() {}

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-export class Config {
+export class ConfigManager {
   constructor(private prefix: string = 'appium') {}
 
   getAppiumPath() {

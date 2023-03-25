@@ -11,9 +11,10 @@
     id="appium-version-not-supported"
     style="display: none"
   >
-    <div class="card flex-column gap-5">
+    <div class="card">
       <div class="content">
-        The appium version <span id="appium-source"></span> is not supported.
+        The appium version <span id="appium-source"></span>
+        <span id="appium-path" class="link-blue"></span> is not supported.
         Required appium version is
         <span id="required-appium-version" class="link-blue"></span>
         and actual version installed is
@@ -23,11 +24,18 @@
     <div class="note margin-5">
       Update the appium version and click refresh to continue.
     </div>
-    <vscode-button class="flex-row full-width refresh-button">
-      <span class="flex-row gap-5"
-        ><i class="codicon codicon-sync"></i>Refresh</span
-      >
-    </vscode-button>
+    <div class="flex-row gap-5 grouped-button">
+      <vscode-button class="flex-row full-width" id="open-settings">
+        <span class="flex-row gap-5"
+          ><i class="codicon codicon-settings-gear"></i>Open settings</span
+        >
+      </vscode-button>
+      <vscode-button class="flex-row full-width refresh-button">
+        <span class="flex-row gap-5"
+          ><i class="codicon codicon-sync"></i>Refresh</span
+        >
+      </vscode-button>
+    </div>
   </div>
   <div
     class="section flex-column gap-5"
@@ -50,35 +58,6 @@
           ><i class="codicon codicon-sync"></i>Refresh</span
         >
       </vscode-button>
-    </div>
-  </div>
-  <div
-    class="section flex-column"
-    id="configure-appium-path"
-    style="display: none"
-  >
-    <div class="section flex-column gap-5">
-      <div class="card">
-        <div class="content line-height-1_5">
-          Found appium with version
-          <span id="appium-version" class="link-blue"></span>
-          globally installed in
-          <span id="appium-path" class="link-blue break-word"></span>
-        </div>
-      </div>
-      <div class="note margin-5">
-        To use the globally installed appium click on Save and continue. If you
-        want to use a different appium executable, then you can manually update
-        the path of executable in the vscode preferences.
-      </div>
-      <div class="flex-row gap-5 full-width">
-        <vscode-button id="save-and-continue" class="grouped-button"
-          >Save and continue</vscode-button
-        >
-        <vscode-button id="update-appium" secondary class="grouped-button"
-          >Update in settings</vscode-button
-        >
-      </div>
     </div>
   </div>
 </div>

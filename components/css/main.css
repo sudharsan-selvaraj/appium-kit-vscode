@@ -33,12 +33,15 @@ html {
 
 .card {
   width: 100%;
-  background-color: var(--vscode-editor-background);
   color: var(--vscode-foreground);
+  background-color: var(--vscode-editor-background);
 }
 
 .card .content {
-  padding: 10px 20px 10px 20px;
+  width: 100%;
+  padding: 8px;
+  word-break: break-word;
+  line-height: 1.4;
 }
 
 .text-center {

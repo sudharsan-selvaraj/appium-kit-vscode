@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as yaml from 'yaml';
 import { APPIUM_CONF_FILE_GLOB } from '../../constants';
-import { ICON_APPIUM, ICON_INVALID, ICON_VALID } from '../../icons';
+import { ICON_APPIUM, ICON_INVALID } from '../../icons';
 import { ViewProvider } from '../view-provider';
 
 export interface ConfigFile {
@@ -14,11 +14,16 @@ export interface ConfigFile {
 export class ConfigtreeItem extends vscode.TreeItem {
   constructor(config: ConfigFile) {
     super(
-      path.basename(config.uri.fsPath),
+      {
+        label: path.basename(config.uri.fsPath),
+        highlights: config.isValid
+          ? []
+          : [[0, path.basename(config.uri.fsPath).length]],
+      },
       vscode.TreeItemCollapsibleState.None
     );
 
-    this.iconPath = config.isValid ? ICON_APPIUM : ICON_INVALID;
+    this.iconPath = ICON_APPIUM;
     this.description = `/${this.getDescription(config)}`;
     this.command = {
       title: 'Open file',
@@ -34,7 +39,7 @@ export class ConfigtreeItem extends vscode.TreeItem {
   }
 }
 
-export class ConfigProvider
+export class ConfigViewProvider
   implements vscode.TreeDataProvider<ConfigFile>, ViewProvider
 {
   private readonly configFiles: Map<string, ConfigFile> = new Map();

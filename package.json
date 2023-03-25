@@ -18,22 +18,21 @@
     "views": {
       "appium": [
         {
+          "id": "appium.configFiles",
+          "type": "tree",
+          "name": "Config Files"
+        },
+        {
           "id": "appium.configure",
           "type": "webview",
           "name": "Configure Appium",
-          "when": "appium.pathUpdated == false"
-        },
-        {
-          "id": "appium.configFiles",
-          "type": "tree",
-          "name": "Config Files",
-          "when": "appium.pathUpdated == true && appium.available == true"
+          "when": "appium.configured == false"
         },
         {
           "id": "appium.environment",
           "type": "webview",
           "name": "Appium Environment",
-          "when": "appium.pathUpdated == true && appium.available == true"
+          "when": "appium.configured == true"
         }
       ]
     },
