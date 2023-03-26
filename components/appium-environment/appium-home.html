@@ -1,0 +1,13 @@
+<vscode-form-group variant="settings-group" style="height: 100px" class="full-width">
+    <vscode-label><span class="lightened">Appium Home:</span> </vscode-label>
+    <vscode-single-select id="appium-home" class="full-width">
+        {{#each instances}}
+        <vscode-option 
+         {{#if this.selected}}
+            selected
+        {{/if}}
+             description="{{this.path}}"
+          >{{this.name}}</vscode-option>
+        {{/each}}
+      </vscode-single-select>
+  </vscode-form-group>

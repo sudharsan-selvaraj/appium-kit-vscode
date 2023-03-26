@@ -1,0 +1,13 @@
+<vscode-form-group variant="settings-group" class="full-width">
+    <vscode-label><span class="lightened">Version:</span> </vscode-label>
+    <vscode-single-select id="appium-executable" class="full-width">
+        {{#each instances}}
+        <vscode-option 
+         {{#if this.selected}}
+            selected
+        {{/if}}
+             description="{{this.path}}"
+          >{{this.version}}</vscode-option>
+        {{/each}}
+      </vscode-single-select>
+  </vscode-form-group>

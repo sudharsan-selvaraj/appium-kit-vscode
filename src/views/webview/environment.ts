@@ -1,7 +1,7 @@
 import { BaseWebView } from './base-webview';
 import * as vscode from 'vscode';
 
-export class InfoPanelWebview extends BaseWebView {
+export class EnvironmentPanelWebview extends BaseWebView {
   public static readonly jsFiles = ['welcome-webview.js'];
   private webview!: vscode.Webview;
 

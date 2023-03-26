@@ -2,13 +2,13 @@ import { ExtensionContext, Webview } from 'vscode';
 import { BaseWebView } from './base-webview';
 import * as vscode from 'vscode';
 import _ = require('lodash');
-import { SUPPORTED_APPIUM_VERSION } from '../../appium';
+import { SUPPORTED_APPIUM_VERSION } from '../../utils/appium';
 import { ViewProvider } from '../view-provider';
 import {
   AppiumEnvironmentProvider,
   AppiumStatusChangeListener,
 } from '../../interfaces/appium-environment-provider';
-import { AppiumStatus } from '../../services/appium-environment';
+import { AppiumInstance } from '../../services/appium-environment';
 import { OpenSettingsCommand } from '../../commands/open-settings';
 
 export class WelcomeWebview
@@ -25,13 +25,14 @@ export class WelcomeWebview
     super(context, 'welcome', WelcomeWebview.jsFiles, []);
   }
 
-  async register(viewId: string, context: ExtensionContext): Promise<void> {
-    vscode.window.registerWebviewViewProvider(viewId, this);
+  async register(viewId: string, context: ExtensionContext): Promise<ViewProvider> {
+    this.context.subscriptions.push(vscode.window.registerWebviewViewProvider(viewId, this));
     this.appiumEnvironmentProvider.addStatusChangeListener(this);
+    return this;
   }
 
-  async onAppiumStatusChange(appiumStatus: AppiumStatus | null) {
-    await this.updateWebView(appiumStatus);
+  async onAppiumStatusChange(appiumInstances: AppiumInstance[]) {
+    await this.updateWebView(appiumInstances);
   }
 
   dispose() {
@@ -54,18 +55,11 @@ export class WelcomeWebview
     this.updateView('appiumVersionNotSupported', data);
   }
 
-  async updateWebView(appiumStatus: AppiumStatus | null) {
-    if (_.isNil(appiumStatus)) {
+  async updateWebView(appiumInstances: AppiumInstance[]) {
+    if (_.isEmpty(appiumInstances)) {
       this.webview.postMessage({
         type: 'update_view',
         section: 'appiumNotFound',
-      });
-    } else if (!appiumStatus.isSupported) {
-      this.showAppiumNotSupportedView({
-        version: appiumStatus.version,
-        source: appiumStatus.source,
-        requiredVersion: SUPPORTED_APPIUM_VERSION,
-        path: appiumStatus.path,
       });
     }
   }
@@ -76,7 +70,7 @@ export class WelcomeWebview
       switch (event.type) {
         case 'ready':
           this.showLoadingView();
-          this.updateWebView(this.appiumEnvironmentProvider.getAppiumStatus());
+          this.updateWebView(this.appiumEnvironmentProvider.getAppiumInstances());
           break;
         case 'refresh':
           this.showLoadingView();

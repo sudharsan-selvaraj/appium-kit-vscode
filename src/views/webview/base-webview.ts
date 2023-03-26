@@ -27,6 +27,8 @@ const assetUri = (
 ) => webview.asWebviewUri(Uri.joinPath(context.extensionUri, ...pathSegments));
 
 export abstract class BaseWebView implements WebviewViewProvider {
+  private webviewView!: WebviewView;
+
   constructor(
     protected context: ExtensionContext,
     private componentName: string,
@@ -34,16 +36,10 @@ export abstract class BaseWebView implements WebviewViewProvider {
     private cssAssets: Array<string>
   ) {}
 
-  resolveWebviewView(
-    webviewView: WebviewView,
-    context: WebviewViewResolveContext<unknown>,
-    token: CancellationToken
-  ): void | Thenable<void> {
-    this.onViewLoaded(webviewView.webview);
-
-    const { cspSource } = webviewView.webview;
+  protected render(body: string) {
+    const { cspSource } = this.webviewView.webview;
     const nonce = getNonce();
-    const { webview } = webviewView;
+    const { webview } = this.webviewView;
     const componentLib = assetUri(
       webview,
       this.context,
@@ -62,9 +58,6 @@ export abstract class BaseWebView implements WebviewViewProvider {
       'dist',
       'codicon.css'
     );
-
-    const body =
-      this.getWebViewHtml(webview) || this.getTemplateFromFile(webview);
 
     const webviewHtml = html`
       <!DOCTYPE html>
@@ -102,10 +95,28 @@ export abstract class BaseWebView implements WebviewViewProvider {
         </body>
       </html>
     `;
+
+    this.webviewView.webview.html = webviewHtml;
+  }
+
+  resolveWebviewView(
+    webviewView: WebviewView,
+    context: WebviewViewResolveContext<unknown>,
+    token: CancellationToken
+  ): void | Thenable<void> {
+    this.webviewView = webviewView;
+
+    this.onViewLoaded(webviewView.webview);
+
     webviewView.webview.options = {
       enableScripts: true,
     };
-    webviewView.webview.html = webviewHtml;
+
+    const body =
+      this.getWebViewHtml(this.webviewView.webview) ||
+      this.getTemplateFromFile(this.webviewView.webview);
+
+    this.render(body);
   }
 
   getAssetUri(webview: Webview, fileName: string) {
@@ -118,8 +129,8 @@ export abstract class BaseWebView implements WebviewViewProvider {
     );
   }
 
-  getTemplateFromFile(webview: Webview) {
-    const uri = this.getAssetUri(webview, 'template.html');
+  getTemplateFromFile(webview: Webview, fileName: string = 'template.html') {
+    const uri = this.getAssetUri(webview, fileName);
     return readFileSync(uri.fsPath, { encoding: 'utf-8' });
   }
 

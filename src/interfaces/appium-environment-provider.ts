@@ -1,11 +1,13 @@
-import { AppiumStatus } from '../services/appium-environment';
+import { AppiumInstance } from '../services/appium-environment';
+import { AppiumHome } from '../types';
 
 export interface AppiumStatusChangeListener {
-  onAppiumStatusChange: (appiumStatus: AppiumStatus | null) => void;
+  onAppiumStatusChange: (appiumInstances: Array<AppiumInstance>) => void;
 }
 
 export interface AppiumEnvironmentProvider {
-  getAppiumStatus(): AppiumStatus | null;
-  refresh(): Promise<AppiumStatus | null>;
+  getAppiumInstances(): Array<AppiumInstance>;
+  getAppiumHomes(): Array<AppiumHome>;
+  refresh(): Promise<Array<AppiumInstance>>;
   addStatusChangeListener(listener: AppiumStatusChangeListener): void;
 }

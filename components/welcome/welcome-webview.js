@@ -17,9 +17,9 @@
       onUpdate: (data) => {
         if (data) {
           const source =
-            data.source === 'settings'
-              ? 'configurated in the settings'
-              : 'installed on the machine';
+            data.source === 'global'
+              ? 'installed globally'
+              : 'installed on the workspace';
           document.getElementById('appium-source').textContent = source;
           document.getElementById('appium-path').textContent =
             data.path || 'unknown';

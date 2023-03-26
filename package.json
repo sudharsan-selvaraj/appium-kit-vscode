@@ -18,21 +18,37 @@
     "views": {
       "appium": [
         {
-          "id": "appium.configFiles",
-          "type": "tree",
-          "name": "Config Files"
-        },
-        {
-          "id": "appium.configure",
+          "id": "appium.view.configure",
           "type": "webview",
-          "name": "Configure Appium",
+          "name": "Configure",
           "when": "appium.configured == false"
         },
         {
-          "id": "appium.environment",
+          "id": "appium.view.environment",
           "type": "webview",
-          "name": "Appium Environment",
+          "name": "Environment",
           "when": "appium.configured == true"
+        },
+        {
+          "id": "appium.view.configFiles",
+          "type": "tree",
+          "name": "Config Files",
+          "when": "appium.configured == true"
+        },
+        {
+          "id": "appium.view.extensions",
+          "type": "webview",
+          "name": "Extensions",
+          "when": "appium.configured == true"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "appium.environment.refresh",
+          "when": "view == appium.view.environment",
+          "group": "navigation"
         }
       ]
     },
@@ -45,6 +61,14 @@
         }
       ]
     },
+    "commands": [
+      {
+        "command": "appium.environment.refresh",
+        "title": "Refresh appium environment",
+        "category": "Appium",
+        "icon": "$(extensions-refresh)"
+      }
+    ],
     "configuration": {
       "title": "Appium",
       "properties": {
@@ -69,6 +93,7 @@
   "devDependencies": {
     "@types/common-tags": "^1.8.1",
     "@types/glob": "^8.1.0",
+    "@types/handlebars": "^4.1.0",
     "@types/lodash": "^4.14.191",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
@@ -93,6 +118,8 @@
     "@bendera/vscode-webview-elements": "^0.12.0",
     "@vscode/codicons": "^0.0.32",
     "common-tags": "^1.8.2",
+    "eventemitter2": "^6.4.9",
+    "handlebars": "^4.7.7",
     "lodash": "^4.17.21",
     "semver": "^7.3.8",
     "teen_process": "^2.0.2",

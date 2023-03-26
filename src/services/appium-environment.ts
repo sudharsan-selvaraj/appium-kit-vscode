@@ -3,106 +3,101 @@ import {
   AppiumEnvironmentProvider,
   AppiumStatusChangeListener,
 } from '../interfaces/appium-environment-provider';
-import { ConfigManager } from '../vscode/config-manager';
 import { StateManager } from '../vscode/state-manager';
-import { Appium } from '../appium';
 import _ = require('lodash');
+import { VscodeWorkspace } from '../vscode/workspace';
+import * as fs from 'fs';
+import {
+  getAppiumExecutablePath,
+  getAppiumVersion,
+  getDefaultAppiumHome,
+  getGlobalAppiumPath,
+  isAppiumVersionSupported,
+} from '../utils/appium';
+import { AppiumHome } from '../types';
 
 export enum AppiumSource {
-  settings = 'settings',
-  installed = 'installed',
+  global = 'global',
+  workspace = 'workspace',
 }
 
-export interface AppiumStatus {
+export interface AppiumInstance {
   version: string;
   path: string;
+  executable?: string;
   source: AppiumSource;
   isSupported: boolean;
 }
 
-export class AppiumEnvironmentService
-  implements AppiumEnvironmentProvider, vscode.Disposable
-{
-  private appiumStatus: AppiumStatus | null = null;
+export class AppiumEnvironmentService implements AppiumEnvironmentProvider, vscode.Disposable {
+  private appiumInstances: Array<AppiumInstance> = [];
   private statusChangeListeners: AppiumStatusChangeListener[] = [];
 
-  constructor(
-    private context: vscode.ExtensionContext,
-    private configManager: ConfigManager,
-    private stateManager: StateManager
-  ) {}
+  constructor(private stateManager: StateManager, private workspace: VscodeWorkspace) {}
 
   async initialize() {
     await this.refresh();
-    this.addConfigChangeListener();
     return this;
   }
 
-  private addConfigChangeListener() {
-    vscode.workspace.onDidChangeConfiguration(async (event) => {
-      if (event.affectsConfiguration('appium.appiumPath')) {
-        const appiumPath = this.configManager.getAppiumPath();
-        if (this.isAppiumPathChanged(appiumPath)) {
-          const currentStatus = _.clone(this.appiumStatus);
-          await this.refresh();
-          if (!_.isEqual(currentStatus, this.appiumStatus)) {
-            this.notify();
-          }
-        }
-      }
-    });
+  getAppiumHomes(): AppiumHome[] {
+    return [
+      [getDefaultAppiumHome()],
+      this.workspace.localStore().getAppiumHomes(),
+      this.workspace.globalStore().getAppiumHomes(),
+    ].flatMap((entry) => entry);
   }
 
-  private isAppiumPathChanged(newAppiumpath: string) {
-    return (
-      !_.isEmpty(newAppiumpath) &&
-      (_.isNil(this.appiumStatus) ||
-        !_.isEqual(this.appiumStatus.path, newAppiumpath))
-    );
+  getAppiumInstances(): AppiumInstance[] {
+    return this.appiumInstances;
   }
 
   private notify() {
     this.statusChangeListeners.forEach((listener) =>
-      listener.onAppiumStatusChange(this.appiumStatus)
+      listener.onAppiumStatusChange(this.appiumInstances)
     );
   }
 
   private async updateState() {
-    if (_.isNil(this.appiumStatus) || !this.appiumStatus.isSupported) {
+    if (_.isEmpty(this.appiumInstances)) {
       this.stateManager.appiumNotConfigured();
     } else {
       this.stateManager.appiumConfigured();
     }
   }
 
-  private async refreshAppiumStatus() {
-    const currentAppiumPathInConfig = this.configManager.getAppiumPath();
-    this.appiumStatus = !_.isEmpty(this.configManager.getAppiumPath())
-      ? await this.discoverAppiumFromConfig()
-      : await this.discoverInstalledAppium();
+  private async refreshAppiumInstances() {
+    this.appiumInstances = [];
+    const instances = await Promise.all([
+      await this.discoverLocalAppium(),
+      await this.discoverGlobalAppium(),
+    ]);
 
-    if (
-      !_.isNil(this.appiumStatus) &&
-      this.appiumStatus.isSupported &&
-      currentAppiumPathInConfig !== this.appiumStatus.path
-    ) {
-      this.configManager.setAppiumPath(this.appiumStatus.path);
-    }
+    instances
+      .filter((instance) => !_.isNil(instance) && instance.isSupported)
+      .forEach((instance) => this.appiumInstances.push(<AppiumInstance>instance));
+
+    this.notify();
   }
 
-  private async discoverAppiumFromConfig(): Promise<AppiumStatus | null> {
-    const appiumPath = this.configManager.getAppiumPath();
+  private async discoverGlobalAppium(): Promise<AppiumInstance | null> {
+    const appiumPath = getGlobalAppiumPath();
     if (!!appiumPath) {
-      return this.getAppiumDetails(appiumPath, AppiumSource.settings);
+      return this.getAppiumDetails(appiumPath, AppiumSource.global);
     } else {
       return null;
     }
   }
 
-  private async discoverInstalledAppium(): Promise<AppiumStatus | null> {
-    const appiumPath = Appium.getAppiumInstallationPath();
-    if (!!appiumPath) {
-      return this.getAppiumDetails(appiumPath, AppiumSource.installed);
+  private async discoverLocalAppium(): Promise<AppiumInstance | null> {
+    if (
+      this.workspace.isOpened() &&
+      fs.existsSync(this.workspace.getFilePath('node_modules/appium'))
+    ) {
+      return this.getAppiumDetails(
+        this.workspace.getFilePath('node_modules/appium'),
+        AppiumSource.workspace
+      );
     } else {
       return null;
     }
@@ -111,20 +106,21 @@ export class AppiumEnvironmentService
   private async getAppiumDetails(
     appiumPath: string | null,
     source: AppiumSource
-  ): Promise<AppiumStatus | null> {
+  ): Promise<AppiumInstance | null> {
     try {
       if (!appiumPath) {
         return null;
       } else {
-        const appiumVersion = await Appium.getAppiumVersion(appiumPath);
+        const appiumVersion = await getAppiumVersion(appiumPath);
         const isVersionSupported = !!appiumVersion
-          ? Appium.isVersionSupported(appiumVersion)
+          ? isAppiumVersionSupported(appiumVersion)
           : false;
 
         return {
           version: appiumVersion,
           path: appiumPath,
           isSupported: isVersionSupported,
+          executable: isVersionSupported ? getAppiumExecutablePath(appiumPath) : '',
           source,
         };
       }
@@ -133,18 +129,14 @@ export class AppiumEnvironmentService
     }
   }
 
-  getAppiumStatus(): AppiumStatus | null {
-    return this.appiumStatus;
-  }
-
   addStatusChangeListener(listener: AppiumStatusChangeListener): void {
     this.statusChangeListeners.push(listener);
   }
 
-  async refresh(): Promise<AppiumStatus | null> {
-    await this.refreshAppiumStatus();
+  async refresh(): Promise<AppiumInstance[]> {
+    await this.refreshAppiumInstances();
     await this.updateState();
-    return this.appiumStatus;
+    return this.appiumInstances;
   }
 
   dispose() {

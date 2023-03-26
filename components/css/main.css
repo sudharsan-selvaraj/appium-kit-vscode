@@ -72,7 +72,6 @@ html {
 .grouped-button,
 .section {
   width: 100%;
-  overflow: hidden;
 }
 
 .margin-5 {
@@ -82,4 +81,8 @@ html {
 .note {
   font-weight: 300;
   font-size: 12px;
+}
+/* vscode single select component */
+vscode-form-group {
+  padding: 5px !important;
 }
