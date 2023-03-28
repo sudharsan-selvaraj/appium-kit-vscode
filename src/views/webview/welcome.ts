@@ -2,36 +2,31 @@ import { ExtensionContext, Webview } from 'vscode';
 import { BaseWebView } from './base-webview';
 import * as vscode from 'vscode';
 import _ = require('lodash');
-import { SUPPORTED_APPIUM_VERSION } from '../../utils/appium';
 import { ViewProvider } from '../view-provider';
-import {
-  AppiumEnvironmentProvider,
-  AppiumStatusChangeListener,
-} from '../../interfaces/appium-environment-provider';
-import { AppiumInstance } from '../../services/appium-environment';
 import { OpenSettingsCommand } from '../../commands/open-settings';
+import { EventBus } from '../../events/event-bus';
+import { AppiumInstanceUpdatedEvent } from '../../events/appium-instance-updated-event';
+import { AppiumInstance } from '../../types';
+import { DatabaseService } from '../../db';
+import { RefreshAppiumInstancesCommand } from '../../commands/refresh-appium-instances';
 
-export class WelcomeWebview
-  extends BaseWebView
-  implements ViewProvider, AppiumStatusChangeListener
-{
+export class WelcomeWebview extends BaseWebView implements ViewProvider {
   public static readonly jsFiles = ['welcome-webview.js'];
   private webview!: vscode.Webview;
 
-  constructor(
-    context: ExtensionContext,
-    private appiumEnvironmentProvider: AppiumEnvironmentProvider
-  ) {
+  constructor(context: ExtensionContext, private eventBus: EventBus) {
     super(context, 'welcome', WelcomeWebview.jsFiles, []);
+    this.eventBus.addListener(
+      AppiumInstanceUpdatedEvent.listener(this.onAppiumInstanceUpdated.bind(this))
+    );
   }
 
   async register(viewId: string, context: ExtensionContext): Promise<ViewProvider> {
     this.context.subscriptions.push(vscode.window.registerWebviewViewProvider(viewId, this));
-    this.appiumEnvironmentProvider.addStatusChangeListener(this);
     return this;
   }
 
-  async onAppiumStatusChange(appiumInstances: AppiumInstance[]) {
+  async onAppiumInstanceUpdated(appiumInstances: AppiumInstance[]) {
     await this.updateWebView(appiumInstances);
   }
 
@@ -40,7 +35,7 @@ export class WelcomeWebview
   }
 
   async updateView(section: string, data: any) {
-    this.webview.postMessage({
+    this.webview?.postMessage({
       type: 'update_view',
       section: section,
       data,
@@ -57,7 +52,7 @@ export class WelcomeWebview
 
   async updateWebView(appiumInstances: AppiumInstance[]) {
     if (_.isEmpty(appiumInstances)) {
-      this.webview.postMessage({
+      this.webview?.postMessage({
         type: 'update_view',
         section: 'appiumNotFound',
       });
@@ -70,12 +65,10 @@ export class WelcomeWebview
       switch (event.type) {
         case 'ready':
           this.showLoadingView();
-          this.updateWebView(this.appiumEnvironmentProvider.getAppiumInstances());
+          this.updateWebView(DatabaseService.getAppiumInstances());
           break;
         case 'refresh':
-          this.showLoadingView();
-          const appiumStatus = await this.appiumEnvironmentProvider.refresh();
-          this.updateWebView(appiumStatus);
+          vscode.commands.executeCommand(RefreshAppiumInstancesCommand.NAME);
           break;
         case 'openSettings':
           vscode.commands.executeCommand(OpenSettingsCommand.NAME);

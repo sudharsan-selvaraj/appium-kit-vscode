@@ -2,39 +2,42 @@ import { ExtensionContext, Webview } from 'vscode';
 import { BaseWebView } from './base-webview';
 import * as vscode from 'vscode';
 import _ = require('lodash');
-import {
-  AppiumEnvironmentProvider,
-  AppiumStatusChangeListener,
-} from '../../interfaces/appium-environment-provider';
-import { AppiumInstance } from '../../services/appium-environment';
 import { html } from 'common-tags';
 import * as handlebar from 'handlebars';
 import { ViewProvider } from '../view-provider';
 import { EventBus } from '../../events/event-bus';
 import { AppiumVersionChangedEvent } from '../../events/appium-version-changed-event';
-import { AppiumHome } from '../../types';
+import { AppiumHome, AppiumInstance } from '../../types';
 import { AppiumHomeChangedEvent } from '../../events/appium-home-changed-event';
+import { DatabaseService } from '../../db';
+import { AppiumInstanceUpdatedEvent } from '../../events/appium-instance-updated-event';
+import { AppiumHomeUpdatedEvent } from '../../events/appium-home-updated-event';
+import { RefreshAppiumInstancesCommand } from '../../commands/refresh-appium-instances';
+import { AddNewAppiumHomeCommand } from '../../commands/add-new-appium-home';
 
-export class AppiumEnvironmentWebView
-  extends BaseWebView
-  implements AppiumStatusChangeListener, ViewProvider
-{
+export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvider {
   private webview!: vscode.Webview;
-  private appiumInstances: AppiumInstance[] = [];
   private appiumHomes: AppiumHome[] = [];
+  private appiumInstances: AppiumInstance[] = [];
   private activeAppiumInstance: AppiumInstance | null = null;
   private activeAppiumHome: AppiumHome | null = null;
-  private isRefreshing: boolean = false;
 
   private versionSelectTemplate!: handlebar.TemplateDelegate;
   private appiumHomeSelectTemplate!: handlebar.TemplateDelegate;
 
-  constructor(
-    context: ExtensionContext,
-    private eventBus: EventBus,
-    private appiumEnvironmentProvider: AppiumEnvironmentProvider
-  ) {
+  constructor(context: ExtensionContext, private eventBus: EventBus) {
     super(context, 'appium-environment', ['appium-environment.js'], []);
+    this.eventBus.addListener(
+      AppiumInstanceUpdatedEvent.listener(async () => {
+        await this.refreshAppiumStatus();
+      })
+    );
+
+    this.eventBus.addListener(
+      AppiumHomeUpdatedEvent.listener(async () => {
+        await this.refreshAppiumStatus();
+      })
+    );
   }
 
   async register(viewId: string, context: ExtensionContext): Promise<ViewProvider> {
@@ -45,14 +48,9 @@ export class AppiumEnvironmentWebView
         },
       })
     );
-    this.appiumEnvironmentProvider.addStatusChangeListener(this);
-    await this.refreshAppiumStatus({ force: false });
-    this.context.subscriptions.push(
-      vscode.commands.registerCommand(
-        'appium.environment.refresh',
-        async () => await this.refreshAppiumStatus({ force: true })
-      )
-    );
+
+    await this.refreshAppiumStatus();
+
     return this;
   }
 
@@ -60,25 +58,29 @@ export class AppiumEnvironmentWebView
     //not required
   }
 
-  onAppiumStatusChange(appiumInstances: AppiumInstance[]) {
-    this.appiumInstances = appiumInstances;
-    this.refreshView();
-  }
-
   onViewLoaded(webview: Webview) {
     this.webview = webview;
     this.webview.onDidReceiveMessage((event) => {
       switch (event.type) {
-        case 'select-appium-home':
-          this.activeAppiumInstance = this.appiumInstances[event.index];
+        case 'select-appium-version':
+          const appiumInstances = DatabaseService.getAppiumInstances();
+          this.activeAppiumInstance = appiumInstances[event.index];
           this.emitAppiumVersionChanged();
           break;
         case 'select-appium-home':
-          this.activeAppiumHome = this.appiumHomes[event.index];
+          const appiumHomes = DatabaseService.getAppiumHomes();
+          this.activeAppiumHome = appiumHomes[event.index];
           this.emitAppiumHomeChanged();
+          break;
+        case 'add-new-appium-home':
+          this.addNewAppiumHome();
           break;
       }
     });
+  }
+
+  private addNewAppiumHome() {
+    vscode.commands.executeCommand(AddNewAppiumHomeCommand.NAME);
   }
 
   private emitAppiumVersionChanged() {
@@ -92,8 +94,7 @@ export class AppiumEnvironmentWebView
   getWebViewHtml(webview: Webview) {
     return html`<div class="container full-width">
       <div class="section flex-column full-width">
-        ${this.isRefreshing ? this.getRefreshingTemplate() : this.getAppiumVersionDropDown()}
-        ${this.getAppiumHomeDropDown()}
+        ${this.getAppiumVersionDropDown()} ${this.getAppiumHomeDropDown()}
       </div>
     </div>`;
   }
@@ -127,20 +128,8 @@ export class AppiumEnvironmentWebView
     });
   }
 
-  getRefreshingTemplate() {
-    return html` <div
-      class="section flex-column"
-      id="loading"
-    >
-      <div class="flex-row gap-5">
-        <i class="codicon codicon-sync codicon-modifier-spin"></i>
-        <p>Refreshing...</p>
-      </div>
-    </div>`;
-  }
-
   async refresh() {
-    await this.appiumEnvironmentProvider.refresh();
+    vscode.commands.executeCommand(RefreshAppiumInstancesCommand.NAME);
   }
 
   refreshView() {
@@ -149,15 +138,9 @@ export class AppiumEnvironmentWebView
     }
   }
 
-  async refreshAppiumStatus(opts: { force: boolean }) {
-    this.isRefreshing = true;
-    this.refreshView();
-    if (opts.force) {
-      this.appiumInstances = await this.appiumEnvironmentProvider.refresh();
-    } else {
-      this.appiumInstances = this.appiumEnvironmentProvider.getAppiumInstances();
-      this.appiumHomes = this.appiumEnvironmentProvider.getAppiumHomes();
-    }
+  async refreshAppiumStatus() {
+    this.appiumHomes = DatabaseService.getAppiumHomes();
+    this.appiumInstances = DatabaseService.getAppiumInstances();
 
     if (this.activeAppiumInstance === null && !_.isEmpty(this.appiumInstances)) {
       this.activeAppiumInstance = this.appiumInstances[0];
@@ -168,8 +151,6 @@ export class AppiumEnvironmentWebView
       this.activeAppiumHome = this.appiumHomes[0];
       this.emitAppiumHomeChanged();
     }
-
-    this.isRefreshing = false;
     this.refreshView();
   }
 }

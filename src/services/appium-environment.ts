@@ -1,8 +1,5 @@
 import * as vscode from 'vscode';
-import {
-  AppiumEnvironmentProvider,
-  AppiumStatusChangeListener,
-} from '../interfaces/appium-environment-provider';
+
 import { StateManager } from '../vscode/state-manager';
 import _ = require('lodash');
 import { VscodeWorkspace } from '../vscode/workspace';
@@ -14,33 +11,46 @@ import {
   getGlobalAppiumPath,
   isAppiumVersionSupported,
 } from '../utils/appium';
-import { AppiumHome } from '../types';
+import { AppiumInstance, AppiumSource } from '../types';
+import { EventBus } from '../events/event-bus';
+import { DatabaseService } from '../db';
+import { AppiumHomeUpdatedEvent } from '../events/appium-home-updated-event';
+import { AppiumInstanceUpdatedEvent } from '../events/appium-instance-updated-event';
 
-export enum AppiumSource {
-  global = 'global',
-  workspace = 'workspace',
-}
-
-export interface AppiumInstance {
-  version: string;
-  path: string;
-  executable?: string;
-  source: AppiumSource;
-  isSupported: boolean;
-}
-
-export class AppiumEnvironmentService implements AppiumEnvironmentProvider, vscode.Disposable {
-  private appiumInstances: Array<AppiumInstance> = [];
-  private statusChangeListeners: AppiumStatusChangeListener[] = [];
-
-  constructor(private stateManager: StateManager, private workspace: VscodeWorkspace) {}
+export class AppiumEnvironmentService implements vscode.Disposable {
+  constructor(
+    private stateManager: StateManager,
+    private workspace: VscodeWorkspace,
+    private eventBus: EventBus
+  ) {}
 
   async initialize() {
-    await this.refresh();
+    await this.refreshAppiumStatus();
+    await this.updateState();
     return this;
   }
 
-  getAppiumHomes(): AppiumHome[] {
+  private async updateState() {
+    const appiumInstances = DatabaseService.getAppiumInstances();
+    if (_.isEmpty(appiumInstances)) {
+      this.stateManager.appiumNotConfigured();
+    } else {
+      this.stateManager.appiumConfigured();
+    }
+  }
+
+  private async discoverAppiumInstances(): Promise<AppiumInstance[]> {
+    const instances = await Promise.all([
+      await this.discoverLocalAppium(),
+      await this.discoverGlobalAppium(),
+    ]);
+
+    return instances.filter(
+      (instance) => !_.isNil(instance) && instance.isSupported
+    ) as AppiumInstance[];
+  }
+
+  private async discoverAppiumHomes() {
     return [
       [getDefaultAppiumHome()],
       this.workspace.localStore().getAppiumHomes(),
@@ -48,36 +58,12 @@ export class AppiumEnvironmentService implements AppiumEnvironmentProvider, vsco
     ].flatMap((entry) => entry);
   }
 
-  getAppiumInstances(): AppiumInstance[] {
-    return this.appiumInstances;
-  }
+  private async refreshAppiumStatus() {
+    const newAppiumInstances = await this.discoverAppiumInstances();
+    const newAppiumHomes = await this.discoverAppiumHomes();
 
-  private notify() {
-    this.statusChangeListeners.forEach((listener) =>
-      listener.onAppiumStatusChange(this.appiumInstances)
-    );
-  }
-
-  private async updateState() {
-    if (_.isEmpty(this.appiumInstances)) {
-      this.stateManager.appiumNotConfigured();
-    } else {
-      this.stateManager.appiumConfigured();
-    }
-  }
-
-  private async refreshAppiumInstances() {
-    this.appiumInstances = [];
-    const instances = await Promise.all([
-      await this.discoverLocalAppium(),
-      await this.discoverGlobalAppium(),
-    ]);
-
-    instances
-      .filter((instance) => !_.isNil(instance) && instance.isSupported)
-      .forEach((instance) => this.appiumInstances.push(<AppiumInstance>instance));
-
-    this.notify();
+    DatabaseService.insertAppiumHome(newAppiumHomes, { reset: true });
+    DatabaseService.insertAppiumInstance(newAppiumInstances, { reset: true });
   }
 
   private async discoverGlobalAppium(): Promise<AppiumInstance | null> {
@@ -129,14 +115,49 @@ export class AppiumEnvironmentService implements AppiumEnvironmentProvider, vsco
     }
   }
 
-  addStatusChangeListener(listener: AppiumStatusChangeListener): void {
-    this.statusChangeListeners.push(listener);
+  async refresh() {
+    await this.refreshAppiumStatus();
+    await this.updateState();
+
+    this.eventBus.fire(new AppiumHomeUpdatedEvent(DatabaseService.getAppiumHomes()));
+    this.eventBus.fire(new AppiumInstanceUpdatedEvent(DatabaseService.getAppiumInstances()));
   }
 
-  async refresh(): Promise<AppiumInstance[]> {
-    await this.refreshAppiumInstances();
-    await this.updateState();
-    return this.appiumInstances;
+  async createNewAppiumHome() {
+    const existingPaths = DatabaseService.getAppiumHomes();
+
+    const homePath = await vscode.window.showInputBox({
+      placeHolder: 'eg: ~/.appium/',
+      prompt: 'Enter the path for new Appium Home',
+      value: '',
+    });
+
+    if (!!homePath) {
+      const pathAlreadyExists = existingPaths.find((p) => p.path === homePath);
+
+      if (!!pathAlreadyExists) {
+        vscode.window.showErrorMessage(
+          `Provided path is already added to appium home with name ${pathAlreadyExists.name}`
+        );
+      } else if (!fs.existsSync(homePath) || !fs.statSync(homePath).isDirectory()) {
+        vscode.window.showErrorMessage(`Provided path is not a valid directory ${homePath}`);
+      } else {
+        const name = await vscode.window.showInputBox({
+          placeHolder: 'Eg: MyPersonalProjectHome',
+          prompt: 'Give a name to the appium home',
+          value: '',
+        });
+
+        if (!!name) {
+          this.workspace.globalStore().addAppiumHome({
+            name,
+            path: homePath,
+          });
+          this.refreshAppiumStatus();
+          this.eventBus.fire(new AppiumHomeUpdatedEvent(DatabaseService.getAppiumHomes()));
+        }
+      }
+    }
   }
 
   dispose() {

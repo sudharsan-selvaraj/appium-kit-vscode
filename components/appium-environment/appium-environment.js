@@ -22,7 +22,6 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('appium-executable').addEventListener('vsc-change', (event) => {
-      console.log(event);
       vscode.postMessage({
         type: 'select-appium-executable',
         index: event.detail.selectedIndex,
@@ -30,10 +29,15 @@
     });
 
     document.getElementById('appium-home').addEventListener('vsc-change', (event) => {
-      console.log(event);
       vscode.postMessage({
         type: 'select-appium-home',
         index: event.detail.selectedIndex,
+      });
+    });
+
+    document.getElementById('add-new-appium-home').addEventListener('click', () => {
+      vscode.postMessage({
+        type: 'add-new-appium-home',
       });
     });
   });

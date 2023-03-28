@@ -15,11 +15,17 @@ import { CommandManager } from './vscode/command-manager';
 import { VscodeWorkspace } from './vscode/workspace';
 import { EventBus } from './events/event-bus';
 import { AppiumExtensions } from './views/webview/appium-extensions';
+import { RefreshAppiumInstancesCommand } from './commands/refresh-appium-instances';
+import { AddNewAppiumHomeCommand } from './commands/add-new-appium-home';
 
 let disposables: vscode.Disposable[] = [];
 
-function getCommands() {
-  return [new OpenSettingsCommand()];
+function getCommands(appiumEnvironmentService: AppiumEnvironmentService) {
+  return [
+    new OpenSettingsCommand(),
+    new RefreshAppiumInstancesCommand(appiumEnvironmentService),
+    new AddNewAppiumHomeCommand(appiumEnvironmentService),
+  ];
 }
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -27,21 +33,18 @@ export async function activate(context: vscode.ExtensionContext) {
   const stateManager = new StateManager();
   const workspace = new VscodeWorkspace(context);
 
-  CommandManager.registerCommands(getCommands());
-
   const appiumEnvironmentService = await new AppiumEnvironmentService(
     stateManager,
-    workspace
+    workspace,
+    eventBus
   ).initialize();
 
-  const welcomeViewProvider = new WelcomeWebview(context, appiumEnvironmentService);
+  CommandManager.registerCommands(getCommands(appiumEnvironmentService));
+
+  const welcomeViewProvider = new WelcomeWebview(context, eventBus);
   const configViewProvider = new ConfigViewProvider();
-  const environmentViewProvider = new AppiumEnvironmentWebView(
-    context,
-    eventBus,
-    appiumEnvironmentService
-  );
-  const appiumExtensionsView = new AppiumExtensions(context, eventBus, appiumEnvironmentService);
+  const environmentViewProvider = new AppiumEnvironmentWebView(context, eventBus);
+  const appiumExtensionsView = new AppiumExtensions(context, eventBus);
 
   /* Initialize Views */
   disposables = [

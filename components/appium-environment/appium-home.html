@@ -1,6 +1,7 @@
 <vscode-form-group variant="settings-group" style="height: 100px" class="full-width">
     <vscode-label><span class="lightened">Appium Home:</span> </vscode-label>
-    <vscode-single-select id="appium-home" class="full-width">
+    <div class="flex-row full-width gap-5">
+      <vscode-single-select id="appium-home" class="full-width">
         {{#each instances}}
         <vscode-option 
          {{#if this.selected}}
@@ -10,4 +11,8 @@
           >{{this.name}}</vscode-option>
         {{/each}}
       </vscode-single-select>
+      <vscode-button style="padding-top:3px;padding-bottom:3px;width:1px;" id="add-new-appium-home">
+        <span class="flex-row"><i class="codicon codicon-new-folder"></i></span>
+      </vscode-button>
+    </div>
   </vscode-form-group>

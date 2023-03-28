@@ -1,6 +1,5 @@
 import { BaseWebView } from './base-webview';
 import * as vscode from 'vscode';
-import { AppiumEnvironmentProvider } from '../../interfaces/appium-environment-provider';
 import { EventBus } from '../../events/event-bus';
 import { AppiumHomeChangedEvent } from '../../events/appium-home-changed-event';
 import { AppiumHome } from '../../types';
@@ -11,11 +10,7 @@ export class AppiumExtensions extends BaseWebView implements ViewProvider {
   private webview!: vscode.Webview;
   private appiumHome: AppiumHome | null = null;
 
-  constructor(
-    context: vscode.ExtensionContext,
-    private eventBus: EventBus,
-    private appiumEnvironmentProvider: AppiumEnvironmentProvider
-  ) {
+  constructor(context: vscode.ExtensionContext, private eventBus: EventBus) {
     super(context, 'extensions', [], []);
     this.eventBus.addListener(
       AppiumHomeChangedEvent.listener((appiumHome) => {

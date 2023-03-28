@@ -55,9 +55,8 @@ export class Store {
 
   getAppiumHomes(): Array<AppiumHome> {
     try {
-      const homeFromState = this.state.get('appium.home') as string;
-      const parsed = JSON.parse(homeFromState || '');
-      return _.isArray(parsed) ? parsed : [];
+      const homeFromState = this.state.get('appium.home') as [];
+      return homeFromState || [];
     } catch (err) {
       return [];
     }
@@ -65,8 +64,8 @@ export class Store {
 
   addAppiumHome(appiumHome: AppiumHome) {
     try {
-      const homeFromState = this.state.get('appium.home') as string;
-      const parsed = JSON.parse(homeFromState || '');
+      const homeFromState = this.state.get('appium.home') as any[];
+      const parsed = homeFromState ?? [];
       parsed.push(appiumHome);
       this.state.update('appium.home', appiumHome);
     } catch (err) {

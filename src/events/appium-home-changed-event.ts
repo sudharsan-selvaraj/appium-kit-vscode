@@ -1,4 +1,3 @@
-import { AppiumInstance } from '../services/appium-environment';
 import { AppiumHome, Consumer } from '../types';
 import { Event } from './event';
 import { EventListener } from './event-listener';
