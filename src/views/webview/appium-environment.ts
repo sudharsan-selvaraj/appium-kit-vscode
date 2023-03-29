@@ -64,13 +64,25 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
       switch (event.type) {
         case 'select-appium-version':
           const appiumInstances = DatabaseService.getAppiumInstances();
-          this.activeAppiumInstance = appiumInstances[event.index];
-          this.emitAppiumVersionChanged();
+          if (
+            _.isNil(this.activeAppiumInstance) ||
+            this.activeAppiumInstance.path !== appiumInstances[event.index].path
+          ) {
+            this.activeAppiumInstance = appiumInstances[event.index];
+            this.emitAppiumVersionChanged();
+          }
+
           break;
         case 'select-appium-home':
           const appiumHomes = DatabaseService.getAppiumHomes();
-          this.activeAppiumHome = appiumHomes[event.index];
-          this.emitAppiumHomeChanged();
+          if (
+            _.isNil(this.activeAppiumHome) ||
+            this.activeAppiumHome.path !== appiumHomes[event.index].path
+          ) {
+            this.activeAppiumHome = appiumHomes[event.index];
+            this.emitAppiumHomeChanged();
+          }
+
           break;
         case 'add-new-appium-home':
           this.addNewAppiumHome();
@@ -144,7 +156,7 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
 
     if (this.activeAppiumInstance === null && !_.isEmpty(this.appiumInstances)) {
       this.activeAppiumInstance = this.appiumInstances[0];
-      this.emitAppiumHomeChanged();
+      this.emitAppiumVersionChanged();
     }
 
     if (this.activeAppiumHome === null && !_.isEmpty(this.appiumHomes)) {

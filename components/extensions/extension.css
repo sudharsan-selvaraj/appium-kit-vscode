@@ -1,0 +1,80 @@
+.tab-container {
+  height: 100%;
+  overflow: hidden;
+}
+
+.tab-body {
+  height: 100%;
+  width: 100%;
+  padding-top: 10px;
+  overflow: hidden;
+}
+
+.extension-container {
+  overflow: auto;
+  height: calc(100vh - 80px);
+  margin-top: 10px;
+}
+
+.extension-scroll-area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.extension-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px;
+  border-bottom: 1px solid var(--vscode-list-hoverBackground);
+}
+
+.extension-card:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
+.extension-card:active {
+  background-color: var(--vscode-list-inactiveFocusBackground);
+}
+
+.extension-card .name {
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.extension-card .label {
+  text-overflow: ellipsis;
+}
+
+.extension-card .value {
+  color: var(--vscode-descriptionForeground);
+  word-break: break-word;
+}
+
+.extension-card .header {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 3px;
+}
+
+.extension-card .row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.extension-card .metadata-container {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.extension-icon {
+  height: 16px;
+  width: 16px;
+}

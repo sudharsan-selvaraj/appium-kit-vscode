@@ -11,18 +11,32 @@ import {
   getGlobalAppiumPath,
   isAppiumVersionSupported,
 } from '../utils/appium';
-import { AppiumInstance, AppiumSource } from '../types';
+import { AppiumHome, AppiumInstance, AppiumSource } from '../types';
 import { EventBus } from '../events/event-bus';
 import { DatabaseService } from '../db';
 import { AppiumHomeUpdatedEvent } from '../events/appium-home-updated-event';
 import { AppiumInstanceUpdatedEvent } from '../events/appium-instance-updated-event';
+import { AppiumHomeChangedEvent } from '../events/appium-home-changed-event';
+import { AppiumVersionChangedEvent } from '../events/appium-version-changed-event';
 
 export class AppiumEnvironmentService implements vscode.Disposable {
   constructor(
     private stateManager: StateManager,
     private workspace: VscodeWorkspace,
     private eventBus: EventBus
-  ) {}
+  ) {
+    this.eventBus.addListener(
+      AppiumHomeChangedEvent.listener(async (appiumHome: AppiumHome) => {
+        await this.updateDefaultAppiumHome(appiumHome);
+      })
+    );
+
+    this.eventBus.addListener(
+      AppiumVersionChangedEvent.listener(async (appiumInstance: AppiumInstance) => {
+        await this.updateDefaultAppiumVersion(appiumInstance);
+      })
+    );
+  }
 
   async initialize() {
     await this.refreshAppiumStatus();
@@ -158,6 +172,38 @@ export class AppiumEnvironmentService implements vscode.Disposable {
         }
       }
     }
+  }
+
+  private async updateDefaultAppiumVersion(appiumInstance: AppiumInstance) {
+    if (!appiumInstance) {
+      return;
+    }
+    const allAppiumInstances = DatabaseService.getAppiumInstances();
+    allAppiumInstances.forEach((instance) => {
+      if (instance.path === appiumInstance.path) {
+        instance.isActive = true;
+      } else {
+        instance.isActive = false;
+      }
+    });
+
+    DatabaseService.insertAppiumInstance(allAppiumInstances, { reset: true });
+  }
+
+  private async updateDefaultAppiumHome(selectedAppiumHome: AppiumHome) {
+    if (!selectedAppiumHome) {
+      return;
+    }
+    const allAppiumHomes = DatabaseService.getAppiumHomes();
+    allAppiumHomes.forEach((home) => {
+      if (home.path === selectedAppiumHome.path) {
+        home.isActive = true;
+      } else {
+        home.isActive = false;
+      }
+    });
+
+    DatabaseService.insertAppiumHome(allAppiumHomes, { reset: true });
   }
 
   dispose() {

@@ -23,7 +23,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('appium-executable').addEventListener('vsc-change', (event) => {
       vscode.postMessage({
-        type: 'select-appium-executable',
+        type: 'select-appium-version',
         index: event.detail.selectedIndex,
       });
     });

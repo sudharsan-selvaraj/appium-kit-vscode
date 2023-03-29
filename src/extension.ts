@@ -14,7 +14,7 @@ import { OpenSettingsCommand } from './commands/open-settings';
 import { CommandManager } from './vscode/command-manager';
 import { VscodeWorkspace } from './vscode/workspace';
 import { EventBus } from './events/event-bus';
-import { AppiumExtensions } from './views/webview/appium-extensions';
+import { AppiumExtensionsWebView } from './views/webview/appium-extensions';
 import { RefreshAppiumInstancesCommand } from './commands/refresh-appium-instances';
 import { AddNewAppiumHomeCommand } from './commands/add-new-appium-home';
 
@@ -44,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const welcomeViewProvider = new WelcomeWebview(context, eventBus);
   const configViewProvider = new ConfigViewProvider();
   const environmentViewProvider = new AppiumEnvironmentWebView(context, eventBus);
-  const appiumExtensionsView = new AppiumExtensions(context, eventBus);
+  const appiumExtensionsView = new AppiumExtensionsWebView(context, eventBus);
 
   /* Initialize Views */
   disposables = [

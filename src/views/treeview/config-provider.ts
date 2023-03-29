@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as yaml from 'yaml';
 import { APPIUM_CONF_FILE_GLOB } from '../../constants';
-import { ICON_APPIUM, ICON_INVALID } from '../../icons';
+import { ICON_APPIUM } from '../../icons';
 import { ViewProvider } from '../view-provider';
 
 export interface ConfigFile {
@@ -41,10 +41,17 @@ export class ConfigViewProvider implements vscode.TreeDataProvider<ConfigFile>, 
   private readonly configFiles: Map<string, ConfigFile> = new Map();
   private configWatcher!: vscode.FileSystemWatcher;
 
+  private _onDidChangeTreeData: vscode.EventEmitter<ConfigFile | undefined | null | void> =
+    new vscode.EventEmitter<ConfigFile | undefined | null | void>();
+
+  onDidChangeTreeData:
+    | vscode.Event<void | ConfigFile | ConfigFile[] | null | undefined>
+    | undefined = this._onDidChangeTreeData.event;
+
   public async register(viewId: string, context: vscode.ExtensionContext) {
-    await this.loadExistingFiles();
     context.subscriptions.push(vscode.window.registerTreeDataProvider(viewId, this));
     this.startFilewatcher();
+    await this.loadExistingFiles();
     return this;
   }
 
@@ -54,6 +61,7 @@ export class ConfigViewProvider implements vscode.TreeDataProvider<ConfigFile>, 
       '**/node_modules/**/*'
     );
     existingFiles.forEach((f) => this.onFileEvent(f, false));
+    this._onDidChangeTreeData.fire();
   }
 
   public startFilewatcher() {
@@ -67,13 +75,6 @@ export class ConfigViewProvider implements vscode.TreeDataProvider<ConfigFile>, 
   dispose() {
     this.configWatcher?.dispose();
   }
-
-  private _onDidChangeTreeData: vscode.EventEmitter<ConfigFile | undefined | null | void> =
-    new vscode.EventEmitter<ConfigFile | undefined | null | void>();
-
-  onDidChangeTreeData:
-    | vscode.Event<void | ConfigFile | ConfigFile[] | null | undefined>
-    | undefined = this._onDidChangeTreeData.event;
 
   getTreeItem(element: ConfigFile): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return new ConfigtreeItem(element);

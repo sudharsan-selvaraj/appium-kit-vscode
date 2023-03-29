@@ -18,3 +18,20 @@ export interface AppiumInstance {
   isSupported: boolean;
   isActive?: boolean;
 }
+
+export interface AppiumExtension {
+  type: 'drivers' | 'plugins';
+  name?: string;
+  installSpec?: string;
+  packageName: string;
+  version?: string;
+  updates: {
+    safe?: string;
+    force?: string;
+  };
+  isInstalling: boolean;
+  isUpdating: boolean;
+  source: 'npm' | 'github' | 'local';
+  description?: string;
+  path: string;
+}

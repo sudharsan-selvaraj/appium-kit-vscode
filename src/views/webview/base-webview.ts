@@ -12,19 +12,15 @@ import { readFileSync } from 'fs';
 
 const getNonce = () => {
   let text = '';
-  const possible =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   for (let i = 0; i < 32; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
 };
 
-const assetUri = (
-  webview: Webview,
-  context: ExtensionContext,
-  ...pathSegments: string[]
-) => webview.asWebviewUri(Uri.joinPath(context.extensionUri, ...pathSegments));
+const assetUri = (webview: Webview, context: ExtensionContext, ...pathSegments: string[]) =>
+  webview.asWebviewUri(Uri.joinPath(context.extensionUri, ...pathSegments));
 
 export abstract class BaseWebView implements WebviewViewProvider {
   private webviewView!: WebviewView;
@@ -90,7 +86,11 @@ export abstract class BaseWebView implements WebviewViewProvider {
         </head>
         <body>
           ${html`${body}`}
-          <script src="${componentLib}" nonce="${nonce}" type="module"></script>
+          <script
+            src="${componentLib}"
+            nonce="${nonce}"
+            type="module"
+          ></script>
           ${this.getJsFile(nonce, webview)}
         </body>
       </html>
@@ -119,14 +119,8 @@ export abstract class BaseWebView implements WebviewViewProvider {
     this.render(body);
   }
 
-  getAssetUri(webview: Webview, fileName: string) {
-    return assetUri(
-      webview,
-      this.context,
-      'components',
-      this.componentName,
-      fileName
-    );
+  protected getAssetUri(webview: Webview, fileName: string) {
+    return assetUri(webview, this.context, 'components', this.componentName, fileName);
   }
 
   getTemplateFromFile(webview: Webview, fileName: string = 'template.html') {
@@ -140,7 +134,7 @@ export abstract class BaseWebView implements WebviewViewProvider {
     );
 
     const templateCssFiles = this.cssAssets.map((cssFile) => {
-      this.getAssetUri(webview, cssFile);
+      return this.getAssetUri(webview, cssFile);
     });
 
     return [defaultCssFiles, templateCssFiles].map((uri) => {
@@ -148,7 +142,6 @@ export abstract class BaseWebView implements WebviewViewProvider {
        rel="stylesheet"
        href="${uri}"
        nonce="${nonce}"
-       id="vscode-codicon-stylesheet"
      />`;
     });
   }
