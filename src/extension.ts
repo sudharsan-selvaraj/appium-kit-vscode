@@ -17,14 +17,16 @@ import { EventBus } from './events/event-bus';
 import { AppiumExtensionsWebView } from './views/webview/appium-extensions';
 import { RefreshAppiumInstancesCommand } from './commands/refresh-appium-instances';
 import { AddNewAppiumHomeCommand } from './commands/add-new-appium-home';
+import { InstallAppiumExtensionCommand } from './commands/install-appium-extension';
 
 let disposables: vscode.Disposable[] = [];
 
-function getCommands(appiumEnvironmentService: AppiumEnvironmentService) {
+function getCommands(appiumEnvironmentService: AppiumEnvironmentService, eventBus: EventBus) {
   return [
     new OpenSettingsCommand(),
     new RefreshAppiumInstancesCommand(appiumEnvironmentService),
     new AddNewAppiumHomeCommand(appiumEnvironmentService),
+    new InstallAppiumExtensionCommand(eventBus),
   ];
 }
 
@@ -39,7 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
     eventBus
   ).initialize();
 
-  CommandManager.registerCommands(getCommands(appiumEnvironmentService));
+  CommandManager.registerCommands(getCommands(appiumEnvironmentService, eventBus));
 
   const welcomeViewProvider = new WelcomeWebview(context, eventBus);
   const configViewProvider = new ConfigViewProvider();

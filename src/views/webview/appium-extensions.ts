@@ -8,6 +8,7 @@ import { getInstalledDrivers, getInstalledPlugins } from '../../utils/appium';
 import { DatabaseService } from '../../db';
 import _ = require('lodash');
 import { html } from 'common-tags';
+import { InstallAppiumExtensionCommand } from '../../commands/install-appium-extension';
 
 export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider {
   private webview!: vscode.Webview;
@@ -45,6 +46,21 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
 
   onViewLoaded(webview: vscode.Webview) {
     this.webview = webview;
+    this.webview.onDidReceiveMessage((event) => {
+      const appiumInstances = DatabaseService.getAppiumInstances();
+      switch (event.type) {
+        case 'install-new-driver':
+          vscode.commands.executeCommand(InstallAppiumExtensionCommand.NAME, [
+            this.appiumHome,
+            appiumInstances[0],
+            {
+              name: 'appium-xcuitest-driver',
+              source: 'npm',
+            },
+          ]);
+          break;
+      }
+    });
   }
 
   getWebViewHtml(webview: vscode.Webview) {
@@ -79,7 +95,9 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
                         ${extensionTitle} <vscode-badge variant="counter" slot="content-after">${extensions.length}</vscode-badge>
                   </vscode-tab-header>`;
 
-    const addNewExtension = `<vscode-button class="full-width" id="add-new-${type}">Install new ${type}</vscode-button>`;
+    const addNewExtension = `<vscode-button class="full-width flex-row" id="add-new-${type}">
+                <span class="flex-row gap-5"> <i class="codicon codicon-cloud-download"></i>Install new ${type} </span>
+              </vscode-button>`;
 
     const list = !extensions.length
       ? `<div class="full-width" style="height:100%;text-align:center;padding-top:20px">
@@ -103,7 +121,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
     } else if (ext.source === 'local') {
       return this.getAssetUri(this.webview, 'folder.svg');
     } else if (ext.source === 'github') {
-      return this.getAssetUri(this.webview, 'github.svg');
+      return this.getAssetUri(this.webview, 'git.svg');
     } else {
       return null;
     }
@@ -124,7 +142,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
 
     const packageName = html` <div class="row">
       <span class="label">package:</span>
-      <span class="value">${ext.packageName}</span>
+      <span class="value link-blue">${ext.packageName}</span>
     </div>`;
     const platforms =
       ext.type === 'drivers'
