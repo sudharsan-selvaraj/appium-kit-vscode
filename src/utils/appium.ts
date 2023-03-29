@@ -86,6 +86,7 @@ async function fetchExtensions(
         isInstalling: false,
         isUpdating: false,
         path: path.join(appiumHome, 'node_modules', maifest[extensionType][name].pkgName),
+        platforms: maifest[extensionType][name].platformNames,
       } as AppiumExtension;
     });
 
@@ -115,12 +116,11 @@ async function checkForUpdates(
   safe?: string;
   force?: string;
 }> {
-  const latestVersion = await npm.getLatestVersion(appiumHome, packageName);
-  const safeVersion = await npm.getLatestSafeUpgradeVersion(
-    appiumHome,
-    packageName,
-    currentVersion
-  );
+  const [latestVersion, safeVersion] = await Promise.all([
+    npm.getLatestVersion(appiumHome, packageName),
+    npm.getLatestSafeUpgradeVersion(appiumHome, packageName, currentVersion),
+  ]);
+
   return {
     safe: !safeVersion || safeVersion === currentVersion ? undefined : safeVersion,
     force: !latestVersion || safeVersion === latestVersion ? undefined : latestVersion,

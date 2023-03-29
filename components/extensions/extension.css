@@ -78,3 +78,13 @@
   height: 16px;
   width: 16px;
 }
+
+.extension-card .platform-container {
+  display: flex;
+  flex-direction: row;
+  gap: 3px;
+}
+
+.extension-card .platform-badge {
+  background-color: var(--vscode-button-background);
+}

@@ -7,6 +7,7 @@ import { ViewProvider } from '../view-provider';
 import { getInstalledDrivers, getInstalledPlugins } from '../../utils/appium';
 import { DatabaseService } from '../../db';
 import _ = require('lodash');
+import { html } from 'common-tags';
 
 export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider {
   private webview!: vscode.Webview;
@@ -97,11 +98,12 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
   }
 
   private getExtensionIcon(ext: AppiumExtension) {
-    console.log(ext.source);
     if (ext.source === 'npm') {
       return this.getAssetUri(this.webview, 'npm.svg');
     } else if (ext.source === 'local') {
       return this.getAssetUri(this.webview, 'folder.svg');
+    } else if (ext.source === 'github') {
+      return this.getAssetUri(this.webview, 'github.svg');
     } else {
       return null;
     }
@@ -110,20 +112,41 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
   private getExtensionCardTemplate(ext: AppiumExtension) {
     const extensionIcon = this.getExtensionIcon(ext);
 
+    const header = html`<div class="header">
+      <span class="name">${ext.name}</span>
+      ${!!extensionIcon ? `<img class="extension-icon" src="${extensionIcon}"></img>` : ''}
+      <vscode-badge
+        variant="counter"
+        slot="content-after"
+        >${ext.version}</vscode-badge
+      >
+    </div>`;
+
+    const packageName = html` <div class="row">
+      <span class="label">package:</span>
+      <span class="value">${ext.packageName}</span>
+    </div>`;
+    const platforms =
+      ext.type === 'drivers'
+        ? `<div class="row">
+    <span class="label">platforms:</span>
+      <div class="platform-container">
+        ${ext.platforms
+          ?.map(
+            (platform) =>
+              `<vscode-badge class="platform-badge" slot="content-after">${platform}</vscode-badge>`
+          )
+          .join('')}
+      </div>
+    </div>`
+        : '';
+
     return `<div class="extension-card">
-              <div class="header">
-                <span class="name">${ext.name}</span>
-                ${
-                  !!extensionIcon ? `<img class="extension-icon" src="${extensionIcon}"></img>` : ''
-                }
-                <vscode-badge variant="counter" slot="content-after">${ext.version}</vscode-badge>
-              </div>
+              ${header}
               ${!!ext.description ? `<span class="value">${ext.description}</span>` : ''}
              <div class="metadata-container">
-                 <div class="row">
-                     <span class="label">package:</span>
-                     <span class="value">${ext.packageName}</span>
-                  </div>
+                ${packageName}
+                 ${platforms}
              </div>
             </div>`;
   }

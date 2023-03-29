@@ -34,4 +34,5 @@ export interface AppiumExtension {
   source: 'npm' | 'github' | 'local';
   description?: string;
   path: string;
+  platforms?: string[]
 }
