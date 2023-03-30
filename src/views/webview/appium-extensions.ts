@@ -174,7 +174,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
     } else if (ext.source === 'git') {
       return this.getAssetUri(this.webview, 'git.svg');
     } else if (ext.source === 'github') {
-      return this.getAssetUri(this.webview, 'git.svg');
+      return this.getAssetUri(this.webview, 'github.svg');
     } else {
       return null;
     }
