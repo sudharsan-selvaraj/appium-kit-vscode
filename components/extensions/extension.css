@@ -51,8 +51,22 @@
   color: var(--vscode-descriptionForeground);
   word-break: break-word;
 }
+.extension-card .header-container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.extension-card .header-icon-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+}
 
 .extension-card .header {
+  width: 100%;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -89,4 +103,13 @@
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
   padding: 3px;
+}
+
+.action-icon {
+  padding: 4px;
+  cursor: pointer;
+}
+
+.action-icon:hover {
+  background-color: var(--vscode-list-inactiveFocusBackground);
 }

@@ -69,7 +69,7 @@ export abstract class BaseWebView implements WebviewViewProvider {
             http-equiv="Content-Security-Policy"
             content="
         img-src ${cspSource};
-        script-src ${cspSource}
+        script-src 'unsafe-inline' ${cspSource} 
         nonce-${nonce}; 
         style-src 'unsafe-inline' ${cspSource};
         style-src-elem 'unsafe-inline' ${cspSource};

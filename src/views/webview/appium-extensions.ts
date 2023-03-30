@@ -9,6 +9,8 @@ import { DatabaseService } from '../../db';
 import _ = require('lodash');
 import { html } from 'common-tags';
 import { InstallAppiumExtensionCommand } from '../../commands/install-appium-extension';
+import { AppiumExtensionUpdatedEvent } from '../../events/appium-extension-updated-event';
+import { UnInstallAppiumExtensionCommand } from '../../commands/uninstall-appium-extension';
 
 export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider {
   private webview!: vscode.Webview;
@@ -25,6 +27,12 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
           this.appiumHome = appiumHome;
           this.loadExtensions();
         }
+      })
+    );
+
+    this.eventBus.addListener(
+      AppiumExtensionUpdatedEvent.listener(() => {
+        this.loadExtensions();
       })
     );
   }
@@ -47,15 +55,24 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
   onViewLoaded(webview: vscode.Webview) {
     this.webview = webview;
     this.webview.onDidReceiveMessage((event) => {
-      const appiumInstances = DatabaseService.getAppiumInstances();
+      const appiumInstance = DatabaseService.getActiveAppiumInstance();
       switch (event.type) {
-        case 'install-new-driver':
+        case 'install-extension':
           vscode.commands.executeCommand(InstallAppiumExtensionCommand.NAME, [
             this.appiumHome,
-            appiumInstances[0],
+            appiumInstance,
             {
-              name: 'appium-xcuitest-driver',
-              source: 'npm',
+              type: event.extensionType,
+            },
+          ]);
+          break;
+        case 'uninstall-extension':
+          vscode.commands.executeCommand(UnInstallAppiumExtensionCommand.NAME, [
+            this.appiumHome,
+            appiumInstance,
+            {
+              name: event.name,
+              type: event.extensionType,
             },
           ]);
           break;
@@ -95,7 +112,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
                         ${extensionTitle} <vscode-badge variant="counter" slot="content-after">${extensions.length}</vscode-badge>
                   </vscode-tab-header>`;
 
-    const addNewExtension = `<vscode-button class="full-width flex-row" id="add-new-${type}">
+    const addNewExtension = `<vscode-button class="full-width flex-row" onclick='installExtension("${type}")'>
                 <span class="flex-row gap-5"> <i class="codicon codicon-cloud-download"></i>Install new ${type} </span>
               </vscode-button>`;
 
@@ -107,7 +124,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
       : `<div>${addNewExtension}
       <div class="extension-container">
         <div class="extension-scroll-area">
-             ${extensions.map((ext) => this.getExtensionCardTemplate(ext)).join('')}
+             ${extensions.map((ext) => this.getExtensionCardTemplate(ext, type)).join('')}
         </div>
       </div>
       </div>`;
@@ -127,23 +144,33 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
     }
   }
 
-  private getExtensionCardTemplate(ext: AppiumExtension) {
+  private getExtensionCardTemplate(ext: AppiumExtension, type: 'driver' | 'plugin') {
     const extensionIcon = this.getExtensionIcon(ext);
 
-    const header = html`<div class="header">
-      <span class="name">${ext.name}</span>
-      ${!!extensionIcon ? `<img class="extension-icon" src="${extensionIcon}"></img>` : ''}
-      <vscode-badge
-        variant="counter"
-        slot="content-after"
-        >${ext.version}</vscode-badge
-      >
+    const header = html`<div class="header-container">
+      <div class="header">
+        <span class="name">${ext.name}</span>
+        ${!!extensionIcon ? `<img class="extension-icon" src="${extensionIcon}"></img>` : ''}
+        <vscode-badge
+          variant="counter"
+          slot="content-after"
+          >${ext.version}</vscode-badge
+        >
+      </div>
+      <div class="header-icon-container">
+        <span
+          onclick='uninstallExtension("${ext.name}", "${type}")'
+          class="action-icon"
+          ><i class="codicon codicon-trash"></i
+        ></span>
+      </div>
     </div>`;
 
     const packageName = html` <div class="row">
       <span class="label">package:</span>
       <span class="value link-blue">${ext.packageName}</span>
     </div>`;
+
     const platforms =
       ext.type === 'drivers'
         ? `<div class="row">

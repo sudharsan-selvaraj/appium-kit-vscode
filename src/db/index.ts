@@ -11,6 +11,18 @@ export class DatabaseService {
     return appiumHomeCollection.find();
   }
 
+  public static getActiveAppiumInstance() {
+    return appiumInstanceCollection.findOne({
+      isActive: true,
+    });
+  }
+
+  public static getActiveAppiumHome() {
+    return appiumHomeCollection.findOne({
+      isActive: true,
+    });
+  }
+
   public static insertAppiumInstance(
     appiumInstances: AppiumInstance[] | AppiumInstance,
     options: { reset: boolean } = { reset: false }

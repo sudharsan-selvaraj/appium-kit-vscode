@@ -1,11 +1,16 @@
-(async () => {
-  const vscode = acquireVsCodeApi();
+const vscode = acquireVsCodeApi();
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('add-new-driver').addEventListener('click', () => {
-      vscode.postMessage({
-        type: 'install-new-driver',
-      });
-    });
+function uninstallExtension(extensionName, type) {
+  vscode.postMessage({
+    type: 'uninstall-extension',
+    extensionType: type,
+    name: extensionName,
   });
-})();
+}
+
+function installExtension(type) {
+  vscode.postMessage({
+    type: 'install-extension',
+    extensionType: type,
+  });
+}

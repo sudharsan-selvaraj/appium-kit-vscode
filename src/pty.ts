@@ -22,6 +22,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
   public onDidWrite = this.writeEmitter.event;
   private process!: ChildProcess;
   private terminal!: vscode.Terminal;
+  private processCompleted = false;
 
   constructor(
     private terminalName: string,
@@ -43,7 +44,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       if (this.handler.onStdout) {
         this.writeEmitter.fire(this.handler.onStdout(data));
       } else {
-        this.writeEmitter.fire(data);
+        this.writeEmitter.fire(data.toString().replace(/\n/g, '\r\n'));
       }
     });
 
@@ -51,7 +52,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       if (this.handler.onStdErr) {
         this.writeEmitter.fire(this.handler.onStdErr(data));
       } else {
-        this.writeEmitter.fire(data);
+        this.writeEmitter.fire(data.toString().replace(/\n/g, '\r\n'));
       }
     });
 
@@ -59,8 +60,15 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       if (this.handler.onError) {
         this.writeEmitter.fire(this.handler.onError(data));
       } else {
-        this.writeEmitter.fire(data.toString());
+        this.writeEmitter.fire(data.toString().replace(/\n/g, '\r\n'));
       }
+    });
+
+    this.process.on('exit', () => {
+      if (this.handler.onComplete) {
+        this.handler.onComplete();
+      }
+      this.processCompleted = true;
     });
   }
 
@@ -71,7 +79,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
   }
 
   public write(data: string) {
-    this.writeEmitter.fire(data);
+    this.writeEmitter.fire(`${data}\r\n`);
   }
 
   public stop() {
@@ -85,7 +93,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       this.process.kill(1);
     }
 
-    if (this.handler.onComplete) {
+    if (this.handler.onComplete && !this.processCompleted) {
       this.handler.onComplete();
     }
   }
@@ -93,7 +101,14 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
   public startProcess() {
     this.terminal = vscode.window.createTerminal({
       name: this.terminalName,
-      pty: this,
+      pty: {
+        onDidWrite: this.writeEmitter.event,
+        open: this.open.bind(this),
+        close: this.close.bind(this),
+        handleInput: this.handleInput.bind(this),
+      },
     });
+
+    this.terminal.show();
   }
 }
