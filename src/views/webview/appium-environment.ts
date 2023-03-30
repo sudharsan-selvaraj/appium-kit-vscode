@@ -6,20 +6,19 @@ import { html } from 'common-tags';
 import * as handlebar from 'handlebars';
 import { ViewProvider } from '../view-provider';
 import { EventBus } from '../../events/event-bus';
-import { AppiumVersionChangedEvent } from '../../events/appium-version-changed-event';
-import { AppiumHome, AppiumInstance } from '../../types';
+import { AppiumHome, AppiumBinary } from '../../types';
 import { AppiumHomeChangedEvent } from '../../events/appium-home-changed-event';
-import { DatabaseService } from '../../db';
-import { AppiumInstanceUpdatedEvent } from '../../events/appium-instance-updated-event';
 import { AppiumHomeUpdatedEvent } from '../../events/appium-home-updated-event';
 import { RefreshAppiumInstancesCommand } from '../../commands/refresh-appium-instances';
 import { AddNewAppiumHomeCommand } from '../../commands/add-new-appium-home';
+import { AppiumBinaryChangedEvent } from '../../events/appium-binary-changed-event';
+import { AppiumBinaryUpdatedEvent } from '../../events/appium-binary-updated-event';
 
 export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvider {
   private webview!: vscode.Webview;
   private appiumHomes: AppiumHome[] = [];
-  private appiumInstances: AppiumInstance[] = [];
-  private activeAppiumInstance: AppiumInstance | null = null;
+  private appiumBinaries: AppiumBinary[] = [];
+  private activeAppiumBinary: AppiumBinary | null = null;
   private activeAppiumHome: AppiumHome | null = null;
 
   private versionSelectTemplate!: handlebar.TemplateDelegate;
@@ -28,16 +27,9 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
   constructor(context: ExtensionContext, private eventBus: EventBus) {
     super(context, 'appium-environment', ['appium-environment.js'], []);
     this.eventBus.addListener(
-      AppiumInstanceUpdatedEvent.listener(async () => {
-        await this.refreshAppiumStatus();
-      })
+      AppiumBinaryUpdatedEvent.listener(this._appiumBinaryUpdated.bind(this))
     );
-
-    this.eventBus.addListener(
-      AppiumHomeUpdatedEvent.listener(async () => {
-        await this.refreshAppiumStatus();
-      })
-    );
+    this.eventBus.addListener(AppiumHomeUpdatedEvent.listener(this._appiumHomeUpdated.bind(this)));
   }
 
   async register(viewId: string, context: ExtensionContext): Promise<ViewProvider> {
@@ -48,8 +40,6 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
         },
       })
     );
-
-    await this.refreshAppiumStatus();
 
     return this;
   }
@@ -99,10 +89,6 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
     this.eventBus.fire(new AppiumVersionChangedEvent(this.activeAppiumInstance as AppiumInstance));
   }
 
-  private emitAppiumHomeChanged() {
-    this.eventBus.fire(new AppiumHomeChangedEvent(this.activeAppiumHome as AppiumHome));
-  }
-
   getWebViewHtml(webview: Webview) {
     return html`<div class="container full-width">
       <div class="section flex-column full-width">
@@ -150,19 +136,24 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
     }
   }
 
-  async refreshAppiumStatus() {
-    this.appiumHomes = DatabaseService.getAppiumHomes();
-    this.appiumInstances = DatabaseService.getAppiumInstances();
-
-    if (this.activeAppiumInstance === null && !_.isEmpty(this.appiumInstances)) {
-      this.activeAppiumInstance = this.appiumInstances[0];
-      this.emitAppiumVersionChanged();
+  async _appiumHomeUpdated(newHomes: AppiumHome[]) {
+    this.appiumHomes = newHomes;
+    if (!!this.activeAppiumHome || !newHomes.some((h) => h.path === this.activeAppiumHome?.path)) {
+      this.activeAppiumHome = newHomes[0];
+      this.eventBus.fire(new AppiumHomeChangedEvent(this.activeAppiumHome));
+      this.refreshView();
     }
+  }
 
-    if (this.activeAppiumHome === null && !_.isEmpty(this.appiumHomes)) {
-      this.activeAppiumHome = this.appiumHomes[0];
-      this.emitAppiumHomeChanged();
+  async _appiumBinaryUpdated(binaries: AppiumBinary[]) {
+    this.appiumBinaries = binaries;
+    if (
+      !!this.activeAppiumBinary ||
+      !binaries.some((b) => b.path === this.activeAppiumBinary?.path)
+    ) {
+      this.activeAppiumBinary = binaries[0];
+      this.eventBus.fire(new AppiumBinaryChangedEvent(this.activeAppiumBinary));
+      this.refreshView();
     }
-    this.refreshView();
   }
 }

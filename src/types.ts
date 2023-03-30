@@ -10,10 +10,10 @@ export enum AppiumSource {
   workspace = 'workspace',
 }
 
-export interface AppiumInstance {
+export interface AppiumBinary {
   version: string;
   path: string;
-  executable?: string;
+  executable: string;
   source: AppiumSource;
   isSupported: boolean;
   isActive?: boolean;
@@ -21,10 +21,10 @@ export interface AppiumInstance {
 
 export interface AppiumExtension {
   type: ExtensionType;
-  name?: string;
+  name: string;
   installSpec?: string;
   packageName: string;
-  version?: string;
+  version: string;
   updates: {
     safe?: string;
     force?: string;

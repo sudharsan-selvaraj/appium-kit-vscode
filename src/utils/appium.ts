@@ -39,7 +39,10 @@ function getAppiumVersion(appiumPath: string) {
 }
 
 function isAppiumVersionSupported(currVesion: string) {
-  return semver.satisfies(semver.coerce(currVesion)?.version as string, SUPPORTED_APPIUM_VERSION);
+  return (
+    !!currVesion &&
+    semver.satisfies(semver.coerce(currVesion)?.version as string, SUPPORTED_APPIUM_VERSION)
+  );
 }
 
 function getAppiumExecutablePath(appiumPath: string) {

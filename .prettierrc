@@ -1,10 +1,10 @@
 {
-  "printWidth": 120,
+  "printWidth": 100,
   "singleQuote": true,
   "semi": true,
   "embedded-language-formatting": "auto",
   "jsxBracketSameLine": true,
   "bracketSameLine": true,
   "singleAttributePerLine": false,
-  "useTabs": true
+  "useTabs": false
 }

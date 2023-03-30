@@ -1,7 +1,7 @@
 import { Command } from './command';
 import { EventBus } from '../events/event-bus';
 import { Pty } from '../pty';
-import { AppiumHome, AppiumInstance, ExtensionType } from '../types';
+import { AppiumHome, AppiumBinary, ExtensionType } from '../types';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import _ = require('lodash');
@@ -24,9 +24,9 @@ export class UpdateAppiumExtensionCommand extends Command {
     super(UpdateAppiumExtensionCommand.NAME);
   }
 
-  public async excute(argss: [AppiumHome, AppiumInstance, UpdateExtensionOptions]) {
+  public async excute(argss: [AppiumHome, AppiumBinary, UpdateExtensionOptions]) {
     const [appiumHome, appiumInstance, options] = [...argss];
-    let unsafe = await this.getUnsafeUpdateStatus(options.versions);
+    let unsafe = await this.isUnsafeUpdate(options.versions);
 
     const args = [appiumInstance.executable as string, options.type, 'update', options.name];
 
@@ -60,7 +60,7 @@ export class UpdateAppiumExtensionCommand extends Command {
     pty.startProcess();
   }
 
-  async getUnsafeUpdateStatus(updates: { safe?: string; force?: string }) {
+  async isUnsafeUpdate(updates: { safe?: string; force?: string }) {
     if (!!updates.safe && !!updates.force) {
       const quickPickItem = [
         {
@@ -78,13 +78,8 @@ export class UpdateAppiumExtensionCommand extends Command {
       const selectedVersion = await vscode.window.showQuickPick(quickPickItem, {
         canPickMany: false,
       });
-      if (selectedVersion?.label === updates.force) {
-        return true;
-      }
-    } else if (!!updates.safe) {
-      return false;
-    } else {
-      return true;
+      return selectedVersion?.label === updates.force;
     }
+    return _.isEmpty(updates.safe) || _.isNil(updates.safe);
   }
 }

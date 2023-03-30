@@ -20,16 +20,21 @@ import { AddNewAppiumHomeCommand } from './commands/add-new-appium-home';
 import { InstallAppiumExtensionCommand } from './commands/install-appium-extension';
 import { UnInstallAppiumExtensionCommand } from './commands/uninstall-appium-extension';
 import { UpdateAppiumExtensionCommand } from './commands/update-appium-extension';
+import { DataStore } from './db/data-store';
+import { initializeDb } from './db';
 
 let disposables: vscode.Disposable[] = [];
 
 export async function activate(context: vscode.ExtensionContext) {
+  const collections = initializeDb(context);
+  const datastore = new DataStore(collections);
   const eventBus = new EventBus();
   const stateManager = new StateManager();
   const workspace = new VscodeWorkspace(context);
 
   const appiumEnvironmentService = await new AppiumEnvironmentService(
     stateManager,
+    datastore,
     workspace,
     eventBus
   ).initialize();
@@ -37,7 +42,7 @@ export async function activate(context: vscode.ExtensionContext) {
   CommandManager.registerCommands([
     new OpenSettingsCommand(),
     new RefreshAppiumInstancesCommand(appiumEnvironmentService),
-    new AddNewAppiumHomeCommand(appiumEnvironmentService),
+    new AddNewAppiumHomeCommand(eventBus, datastore),
     new InstallAppiumExtensionCommand(eventBus),
     new UnInstallAppiumExtensionCommand(eventBus),
     new UpdateAppiumExtensionCommand(eventBus),
