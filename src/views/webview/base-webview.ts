@@ -9,6 +9,7 @@ import {
 } from 'vscode';
 import { html, safeHtml } from 'common-tags';
 import { readFileSync } from 'fs';
+import { NodeModulesAccessor, NodeModulesKeys } from '../../build';
 
 const getNonce = () => {
   let text = '';
@@ -39,20 +40,13 @@ export abstract class BaseWebView implements WebviewViewProvider {
     const componentLib = assetUri(
       webview,
       this.context,
-      'node_modules',
-      '@bendera',
-      'vscode-webview-elements',
-      'dist',
-      'bundled.js'
+      ...NodeModulesAccessor.getPathToOutputFile(NodeModulesKeys.webviewElementJs)
     );
+
     const cssLib = assetUri(
       webview,
       this.context,
-      'node_modules',
-      '@vscode',
-      'codicons',
-      'dist',
-      'codicon.css'
+      ...NodeModulesAccessor.getPathToOutputFile(NodeModulesKeys.codiconCss)
     );
 
     const webviewHtml = html`
