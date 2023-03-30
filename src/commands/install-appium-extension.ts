@@ -1,15 +1,14 @@
 import { Command } from './command';
 import { EventBus } from '../events/event-bus';
 import { Pty } from '../pty';
-import { AppiumHomeChangedEvent } from '../events/appium-home-changed-event';
-import { AppiumHome, AppiumInstance } from '../types';
+import { AppiumHome, AppiumInstance, ExtensionType } from '../types';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import _ = require('lodash');
 import { AppiumExtensionUpdatedEvent } from '../events/appium-extension-updated-event';
 
 export interface InstallExtensionOptions {
-  type: 'driver' | 'plugin';
+  type: ExtensionType;
 }
 
 export class InstallAppiumExtensionCommand extends Command {
@@ -86,9 +85,13 @@ export class InstallAppiumExtensionCommand extends Command {
         source: 'local',
       };
     } else {
-      source = await this.getSource(type);
-      if (!source) {
-        return null;
+      if (name.endsWith('.git')) {
+        source = 'git';
+      } else {
+        source = await this.getSource(type);
+        if (!source) {
+          return null;
+        }
       }
 
       if (source === 'github' || source === 'git') {
@@ -111,7 +114,7 @@ export class InstallAppiumExtensionCommand extends Command {
     }
   }
 
-  private async getExtensionName(type: 'driver' | 'plugin') {
+  private async getExtensionName(type: ExtensionType) {
     const name = await vscode.window.showInputBox({
       title: `Enter the name of ${type} to be installed`,
       placeHolder: 'Eg: appium-xcuitest-driver',
@@ -120,7 +123,7 @@ export class InstallAppiumExtensionCommand extends Command {
     return name;
   }
 
-  private async getSource(type: 'driver' | 'plugin') {
+  private async getSource(type: ExtensionType) {
     const source = await vscode.window.showQuickPick(['npm', 'github', 'local', 'git'], {
       canPickMany: false,
       title: `Pick the installation source of the ${type}`,
@@ -129,7 +132,7 @@ export class InstallAppiumExtensionCommand extends Command {
     return source;
   }
 
-  private async getPackageName(type: 'driver' | 'plugin') {
+  private async getPackageName(type: ExtensionType) {
     const packageName = await vscode.window.showInputBox({
       title: `Enter the name of package`,
       placeHolder: 'Eg: appium-xcuitest-driver',

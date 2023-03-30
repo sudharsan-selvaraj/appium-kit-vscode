@@ -1,5 +1,12 @@
 const vscode = acquireVsCodeApi();
 
+function installExtension(type) {
+  vscode.postMessage({
+    type: 'install-extension',
+    extensionType: type,
+  });
+}
+
 function uninstallExtension(extensionName, type) {
   vscode.postMessage({
     type: 'uninstall-extension',
@@ -8,9 +15,11 @@ function uninstallExtension(extensionName, type) {
   });
 }
 
-function installExtension(type) {
+function updateExtension(extensionName, type, versions) {
   vscode.postMessage({
-    type: 'install-extension',
+    type: 'update-extension',
     extensionType: type,
+    name: extensionName,
+    versions: versions,
   });
 }

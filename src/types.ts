@@ -20,7 +20,7 @@ export interface AppiumInstance {
 }
 
 export interface AppiumExtension {
-  type: 'drivers' | 'plugins';
+  type: ExtensionType;
   name?: string;
   installSpec?: string;
   packageName: string;
@@ -29,10 +29,12 @@ export interface AppiumExtension {
     safe?: string;
     force?: string;
   };
-  isInstalling: boolean;
+  isDeleting: boolean;
   isUpdating: boolean;
-  source: 'npm' | 'github' | 'local';
+  source: 'npm' | 'github' | 'local' | 'git';
   description?: string;
   path: string;
-  platforms?: string[]
+  platforms?: string[];
 }
+
+export type ExtensionType = 'driver' | 'plugin';

@@ -3,7 +3,7 @@ import * as semver from 'semver';
 import * as fs from 'fs';
 import * as path from 'path';
 import { sync as which } from 'which';
-import { AppiumExtension, AppiumHome } from '../types';
+import { AppiumExtension, AppiumHome, ExtensionType } from '../types';
 import { homedir } from 'os';
 import { env, npm } from '@appium/support';
 import { execa } from 'execa';
@@ -55,18 +55,20 @@ function getDefaultAppiumHome(): AppiumHome {
 }
 
 async function getInstalledDrivers(appiumExecutable: string, appiumHome: string) {
-  return await fetchExtensions(appiumExecutable, appiumHome, 'drivers');
+  return await fetchExtensions(appiumExecutable, appiumHome, 'driver');
 }
 
 async function getInstalledPlugins(appiumExecutable: string, appiumHome: string) {
-  return await fetchExtensions(appiumExecutable, appiumHome, 'plugins');
+  return await fetchExtensions(appiumExecutable, appiumHome, 'plugin');
 }
 
 async function fetchExtensions(
   appiumExecutable: string,
   appiumHome: string,
-  extensionType: 'drivers' | 'plugins'
+  extensionType: ExtensionType
 ): Promise<AppiumExtension[]> {
+  const extensionsection = `${extensionType}s`;
+
   const manifestPath = await env.resolveManifestPath(appiumHome);
   if (
     !fs.existsSync(manifestPath) &&
@@ -75,18 +77,18 @@ async function fetchExtensions(
     return [];
   } else {
     const maifest = await readAppiumManifest(manifestPath);
-    const extensions = Object.keys(maifest[extensionType]).map((name) => {
+    const extensions = Object.keys(maifest[extensionsection]).map((name) => {
       return {
         name,
-        version: semver.parse(maifest[extensionType][name].version)?.version,
-        packageName: maifest[extensionType][name].pkgName,
-        source: maifest[extensionType][name].installType,
-        installSpec: maifest[extensionType][name].installSpec,
+        version: semver.parse(maifest[extensionsection][name].version)?.version,
+        packageName: maifest[extensionsection][name].pkgName,
+        source: maifest[extensionsection][name].installType,
+        installSpec: maifest[extensionsection][name].installSpec,
         type: extensionType,
-        isInstalling: false,
+        isDeleting: false,
         isUpdating: false,
-        path: path.join(appiumHome, 'node_modules', maifest[extensionType][name].pkgName),
-        platforms: maifest[extensionType][name].platformNames,
+        path: path.join(appiumHome, 'node_modules', maifest[extensionsection][name].pkgName),
+        platforms: maifest[extensionsection][name].platformNames,
       } as AppiumExtension;
     });
 

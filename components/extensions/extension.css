@@ -30,13 +30,13 @@
   border-bottom: 1px solid var(--vscode-list-hoverBackground);
 }
 
-.extension-card:hover {
+/* .extension-card:hover {
   background-color: var(--vscode-list-hoverBackground);
-}
+} */
 
-.extension-card:active {
+/* .extension-card:active {
   background-color: var(--vscode-list-inactiveFocusBackground);
-}
+} */
 
 .extension-card .name {
   font-weight: 700;
@@ -63,6 +63,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
+  gap: 3px;
 }
 
 .extension-card .header {
@@ -106,10 +107,11 @@
 }
 
 .action-icon {
-  padding: 4px;
+  padding: 3px;
   cursor: pointer;
 }
 
 .action-icon:hover {
   background-color: var(--vscode-list-inactiveFocusBackground);
+  border-radius: 5px;
 }

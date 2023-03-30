@@ -1,12 +1,12 @@
 import { Command } from './command';
 import { EventBus } from '../events/event-bus';
 import { Pty } from '../pty';
-import { AppiumHome, AppiumInstance } from '../types';
+import { AppiumHome, AppiumInstance, ExtensionType } from '../types';
 import { AppiumExtensionUpdatedEvent } from '../events/appium-extension-updated-event';
 
 export interface UnInstallExtensionOptions {
   name: string;
-  type: 'driver' | 'plugin';
+  type: ExtensionType;
 }
 
 export class UnInstallAppiumExtensionCommand extends Command {

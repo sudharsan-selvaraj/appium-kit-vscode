@@ -19,6 +19,7 @@ import { RefreshAppiumInstancesCommand } from './commands/refresh-appium-instanc
 import { AddNewAppiumHomeCommand } from './commands/add-new-appium-home';
 import { InstallAppiumExtensionCommand } from './commands/install-appium-extension';
 import { UnInstallAppiumExtensionCommand } from './commands/uninstall-appium-extension';
+import { UpdateAppiumExtensionCommand } from './commands/update-appium-extension';
 
 let disposables: vscode.Disposable[] = [];
 
@@ -29,6 +30,7 @@ function getCommands(appiumEnvironmentService: AppiumEnvironmentService, eventBu
     new AddNewAppiumHomeCommand(appiumEnvironmentService),
     new InstallAppiumExtensionCommand(eventBus),
     new UnInstallAppiumExtensionCommand(eventBus),
+    new UpdateAppiumExtensionCommand(eventBus),
   ];
 }
 

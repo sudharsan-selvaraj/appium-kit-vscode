@@ -2,7 +2,7 @@ import { BaseWebView } from './base-webview';
 import * as vscode from 'vscode';
 import { EventBus } from '../../events/event-bus';
 import { AppiumHomeChangedEvent } from '../../events/appium-home-changed-event';
-import { AppiumExtension, AppiumHome } from '../../types';
+import { AppiumExtension, AppiumHome, ExtensionType } from '../../types';
 import { ViewProvider } from '../view-provider';
 import { getInstalledDrivers, getInstalledPlugins } from '../../utils/appium';
 import { DatabaseService } from '../../db';
@@ -11,12 +11,14 @@ import { html } from 'common-tags';
 import { InstallAppiumExtensionCommand } from '../../commands/install-appium-extension';
 import { AppiumExtensionUpdatedEvent } from '../../events/appium-extension-updated-event';
 import { UnInstallAppiumExtensionCommand } from '../../commands/uninstall-appium-extension';
+import { UpdateAppiumExtensionCommand } from '../../commands/update-appium-extension';
 
 export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider {
   private webview!: vscode.Webview;
   private appiumHome: AppiumHome | null = null;
   private drivers: AppiumExtension[] = [];
   private plugins: AppiumExtension[] = [];
+  private activeTab: ExtensionType = 'driver';
   private loading: boolean = false;
 
   constructor(context: vscode.ExtensionContext, private eventBus: EventBus) {
@@ -56,6 +58,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
     this.webview = webview;
     this.webview.onDidReceiveMessage((event) => {
       const appiumInstance = DatabaseService.getActiveAppiumInstance();
+      this.activeTab = event.extensionType;
       switch (event.type) {
         case 'install-extension':
           vscode.commands.executeCommand(InstallAppiumExtensionCommand.NAME, [
@@ -67,14 +70,43 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
           ]);
           break;
         case 'uninstall-extension':
-          vscode.commands.executeCommand(UnInstallAppiumExtensionCommand.NAME, [
-            this.appiumHome,
-            appiumInstance,
-            {
-              name: event.name,
-              type: event.extensionType,
-            },
-          ]);
+          {
+            const extension = [...this.drivers, ...this.plugins].find(
+              (ext) => ext.type === event.extensionType && ext.name === event.name
+            );
+            if (!!extension) {
+              extension.isDeleting = true;
+            }
+            vscode.commands.executeCommand(UnInstallAppiumExtensionCommand.NAME, [
+              this.appiumHome,
+              appiumInstance,
+              {
+                name: event.name,
+                type: event.extensionType,
+              },
+            ]);
+            this.setLoading(false);
+          }
+          break;
+        case 'update-extension':
+          {
+            const extension = [...this.drivers, ...this.plugins].find(
+              (ext) => ext.type === event.extensionType && ext.name === event.name
+            );
+            if (!!extension) {
+              extension.isUpdating = true;
+            }
+            vscode.commands.executeCommand(UpdateAppiumExtensionCommand.NAME, [
+              this.appiumHome,
+              appiumInstance,
+              {
+                name: event.name,
+                type: event.extensionType,
+                versions: !!event.versions ? JSON.parse(event.versions) : {},
+              },
+            ]);
+            this.setLoading(false);
+          }
           break;
       }
     });
@@ -87,7 +119,9 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
     } else {
       const driverList = this.getExtensionListTemplate('Drivers', this.drivers, 'driver');
       const pluginList = this.getExtensionListTemplate('Plugins', this.plugins, 'plugin');
-      body = `<vscode-tabs class="full-width tab-container">${driverList} ${pluginList}</vscode-tabs>`;
+      body = `<vscode-tabs class="full-width tab-container" selected-index=${
+        this.activeTab === 'driver' ? '0' : '1'
+      }>${driverList} ${pluginList}</vscode-tabs>`;
     }
     return `<div class="container flex-column">${body}</body>`;
 
@@ -106,7 +140,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
   getExtensionListTemplate(
     extensionTitle: string,
     extensions: AppiumExtension[],
-    type: 'driver' | 'plugin'
+    type: ExtensionType
   ) {
     const header = `<vscode-tab-header slot="header">
                         ${extensionTitle} <vscode-badge variant="counter" slot="content-after">${extensions.length}</vscode-badge>
@@ -137,6 +171,8 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
       return this.getAssetUri(this.webview, 'npm.svg');
     } else if (ext.source === 'local') {
       return this.getAssetUri(this.webview, 'folder.svg');
+    } else if (ext.source === 'git') {
+      return this.getAssetUri(this.webview, 'git.svg');
     } else if (ext.source === 'github') {
       return this.getAssetUri(this.webview, 'git.svg');
     } else {
@@ -144,8 +180,11 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
     }
   }
 
-  private getExtensionCardTemplate(ext: AppiumExtension, type: 'driver' | 'plugin') {
+  private getExtensionCardTemplate(ext: AppiumExtension, type: ExtensionType) {
     const extensionIcon = this.getExtensionIcon(ext);
+    const loadingicon = html`<span class="action-icon"
+      ><i class="codicon codicon-modifier-spin codicon-loading"></i>
+    </span>`;
 
     const header = html`<div class="header-container">
       <div class="header">
@@ -158,11 +197,25 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
         >
       </div>
       <div class="header-icon-container">
-        <span
+        ${!!ext.updates?.safe || !!ext.updates.force
+          ? ext.isUpdating
+            ? loadingicon
+            : `<span
+            onclick='updateExtension("${ext.name}", "${type}", ${JSON.stringify(
+                JSON.stringify(ext.updates || {})
+              )})'
+            class="action-icon"
+            ><i class="codicon codicon-versions"></i>
+          </span>`
+          : ''}
+        ${ext.isDeleting
+          ? loadingicon
+          : `<span
           onclick='uninstallExtension("${ext.name}", "${type}")'
           class="action-icon"
-          ><i class="codicon codicon-trash"></i
-        ></span>
+        >
+          <i class="codicon codicon-trash"></i>
+        </span>`}
       </div>
     </div>`;
 
@@ -172,7 +225,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
     </div>`;
 
     const platforms =
-      ext.type === 'drivers'
+      ext.type === 'driver'
         ? `<div class="row">
     <span class="label">platforms:</span>
       <div class="platform-container">
@@ -205,14 +258,16 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
 
   async loadExtensions() {
     this.setLoading(true);
+    this.activeTab = 'driver';
+
     const appiumHome = _.clone(this.appiumHome);
 
     const [driver, plugins] = await Promise.all([
-      await getInstalledDrivers(
+      getInstalledDrivers(
         DatabaseService.getAppiumInstances()[0].path,
         this.appiumHome?.path as string
       ),
-      await getInstalledPlugins(
+      getInstalledPlugins(
         DatabaseService.getAppiumInstances()[0].path,
         this.appiumHome?.path as string
       ),
