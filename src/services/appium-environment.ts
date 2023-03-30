@@ -39,7 +39,7 @@ export class AppiumEnvironmentService implements vscode.Disposable {
   }
 
   async initialize() {
-    await this.refreshAppiumStatus();
+    await this.refreshAppiumEnvironment();
     await this.updateState();
     return this;
   }
@@ -66,13 +66,13 @@ export class AppiumEnvironmentService implements vscode.Disposable {
 
   private async discoverAppiumHomes() {
     return [
-      [getDefaultAppiumHome()],
+      getDefaultAppiumHome(),
       this.workspace.localStore().getAppiumHomes(),
       this.workspace.globalStore().getAppiumHomes(),
     ].flatMap((entry) => entry);
   }
 
-  private async refreshAppiumStatus() {
+  private async refreshAppiumEnvironment() {
     const newAppiumInstances = await this.discoverAppiumInstances();
     const newAppiumHomes = await this.discoverAppiumHomes();
 
@@ -130,7 +130,7 @@ export class AppiumEnvironmentService implements vscode.Disposable {
   }
 
   async refresh() {
-    await this.refreshAppiumStatus();
+    await this.refreshAppiumEnvironment();
     await this.updateState();
 
     this.eventBus.fire(new AppiumHomeUpdatedEvent(DatabaseService.getAppiumHomes()));
@@ -163,11 +163,11 @@ export class AppiumEnvironmentService implements vscode.Disposable {
         });
 
         if (!!name) {
-          this.workspace.globalStore().addAppiumHome({
+          await this.workspace.globalStore().addAppiumHome({
             name,
             path: homePath,
           });
-          this.refreshAppiumStatus();
+          this.refreshAppiumEnvironment();
           this.eventBus.fire(new AppiumHomeUpdatedEvent(DatabaseService.getAppiumHomes()));
         }
       }

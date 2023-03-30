@@ -15,11 +15,10 @@ function uninstallExtension(extensionName, type) {
   });
 }
 
-function updateExtension(extensionName, type, versions) {
+function updateExtension(extensionName, type) {
   vscode.postMessage({
     type: 'update-extension',
     extensionType: type,
     name: extensionName,
-    versions: versions,
   });
 }

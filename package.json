@@ -18,12 +18,6 @@
     "views": {
       "appium": [
         {
-          "id": "appium.view.configure",
-          "type": "webview",
-          "name": "Configure",
-          "when": "appium.configured == false"
-        },
-        {
           "id": "appium.view.environment",
           "type": "webview",
           "name": "Environment",
@@ -40,6 +34,12 @@
           "type": "webview",
           "name": "Extensions",
           "when": "appium.configured == true"
+        },
+        {
+          "id": "appium.view.configure",
+          "type": "webview",
+          "name": "Configure",
+          "when": "appium.configured == false"
         }
       ]
     },

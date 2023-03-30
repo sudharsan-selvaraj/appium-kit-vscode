@@ -133,26 +133,22 @@ function getExtensionMetadata(
   extension: AppiumExtension,
   appiumHome: string
 ): { description?: string; homepage?: string } {
-  // if (extension.source === 'npm') {
-  //   const res = (
-  //     await npm.exec('view', [extension.packageName, 'description', 'homepage'], {
-  //       cwd: appiumHome,
-  //       json: true,
-  //     })
-  //   ).json;
-  //   return res;
-  // } else if (extension.source === 'local') {
-  //   //const pkg = readPackageJson();
-  //   return {};
-  // } else {
-  //   return {};
-  // }
-
   try {
-    const pkgJson = readPackageJson(extension.path);
-    return {
-      description: pkgJson.description,
-    };
+    let pkgPath;
+    if (fs.existsSync(path.join(extension.path || '', 'package.json'))) {
+      pkgPath = extension.path;
+    } else if (fs.existsSync(path.join(appiumHome, 'node_modules', extension.packageName))) {
+      pkgPath = path.join(appiumHome, 'node_modules', extension.packageName);
+    }
+
+    if (!!pkgPath) {
+      const pkgJson = readPackageJson(extension.path);
+      return {
+        description: pkgJson.description,
+      };
+    } else {
+      return {};
+    }
   } catch (err) {
     return {};
   }

@@ -53,6 +53,7 @@ const extensionConfig = {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
     extensions: ['.ts', '.js'],
   },
+
   module: {
     rules: [
       {

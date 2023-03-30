@@ -23,17 +23,6 @@ import { UpdateAppiumExtensionCommand } from './commands/update-appium-extension
 
 let disposables: vscode.Disposable[] = [];
 
-function getCommands(appiumEnvironmentService: AppiumEnvironmentService, eventBus: EventBus) {
-  return [
-    new OpenSettingsCommand(),
-    new RefreshAppiumInstancesCommand(appiumEnvironmentService),
-    new AddNewAppiumHomeCommand(appiumEnvironmentService),
-    new InstallAppiumExtensionCommand(eventBus),
-    new UnInstallAppiumExtensionCommand(eventBus),
-    new UpdateAppiumExtensionCommand(eventBus),
-  ];
-}
-
 export async function activate(context: vscode.ExtensionContext) {
   const eventBus = new EventBus();
   const stateManager = new StateManager();
@@ -45,7 +34,14 @@ export async function activate(context: vscode.ExtensionContext) {
     eventBus
   ).initialize();
 
-  CommandManager.registerCommands(getCommands(appiumEnvironmentService, eventBus));
+  CommandManager.registerCommands([
+    new OpenSettingsCommand(),
+    new RefreshAppiumInstancesCommand(appiumEnvironmentService),
+    new AddNewAppiumHomeCommand(appiumEnvironmentService),
+    new InstallAppiumExtensionCommand(eventBus),
+    new UnInstallAppiumExtensionCommand(eventBus),
+    new UpdateAppiumExtensionCommand(eventBus),
+  ]);
 
   const welcomeViewProvider = new WelcomeWebview(context, eventBus);
   const configViewProvider = new ConfigViewProvider();
