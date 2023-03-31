@@ -21,19 +21,22 @@
           "id": "appium.view.configFiles",
           "type": "tree",
           "name": "Config Files",
-          "when": "appium.configured == true"
+          "when": "appium.configured == true",
+          "initialSize": 0.5
         },
         {
           "id": "appium.view.environment",
           "type": "webview",
           "name": "Environment",
-          "when": "appium.configured == true"
+          "when": "appium.configured == true",
+          "initialSize": 1
         },
         {
           "id": "appium.view.extensions",
           "type": "webview",
           "name": "Extensions",
-          "when": "appium.configured == true"
+          "when": "appium.configured == true",
+          "initialSize": 3
         },
         {
           "id": "appium.view.configure",
@@ -43,6 +46,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "appium.view.configFiles",
+        "contents": "No config files present in the workspace."
+      }
+    ],
     "menus": {
       "view/title": [
         {

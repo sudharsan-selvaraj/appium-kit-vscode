@@ -7,6 +7,7 @@ export interface NodeModulesValue {
   sourcePath: string[];
   destinationPath: string[];
   fileName: string;
+  additionalFiles?: string[];
   includeFolder?: boolean;
 }
 
@@ -19,8 +20,9 @@ export class NodeModulesAccessor {
       {
         sourcePath: ['node_modules', '@vscode', 'codicons', 'dist'],
         destinationPath: ['libs', '@vscode', 'codicons', 'dist'],
+        additionalFiles: ['codicon.ttf'],
         fileName: 'codicon.css',
-        includeFolder: true,
+        includeFolder: false,
       },
     ],
     [
@@ -29,7 +31,7 @@ export class NodeModulesAccessor {
         sourcePath: ['node_modules', '@bendera', 'vscode-webview-elements', 'dist'],
         destinationPath: ['libs', '@bendera', 'vscode-webview-elements', 'dist'],
         fileName: 'bundled.js',
-        includeFolder: true,
+        includeFolder: false,
       },
     ],
   ]);

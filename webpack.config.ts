@@ -3,6 +3,7 @@
 import { NodeModulesAccessor, NodeModulesKeys } from './src/build';
 import * as CopyPlugin from 'copy-webpack-plugin';
 import * as webpack from 'webpack';
+import * as _ from 'lodash';
 const path = require('path');
 
 //@ts-check
@@ -12,24 +13,26 @@ function copyNodeModulesFiles(): CopyPlugin {
   const files: NodeModulesKeys[] = Object.keys(NodeModulesKeys)
     .filter((key) => !isNaN(Number(key)))
     .map((key) => Number(key));
-  const copies: CopyPlugin.ObjectPattern[] = files.map((file) => {
+  const copies: CopyPlugin.ObjectPattern[][] = files.map((file) => {
     const value = NodeModulesAccessor.getPathToNodeModulesFile(file);
-    let sourcePath;
-    let destinationPath;
+    const fileCopies: any[] = [];
     if (value.includeFolder) {
-      sourcePath = path.join(...value.sourcePath);
-      destinationPath = path.join(...value.destinationPath);
+      fileCopies.push({
+        from: path.join(...value.sourcePath),
+        to: path.join(...value.destinationPath),
+      });
     } else {
-      sourcePath = path.join(...value.sourcePath, value.fileName);
-      destinationPath = path.join(...value.destinationPath, value.fileName);
+      [...(value.additionalFiles || []), value.fileName].forEach((f) => {
+        fileCopies.push({
+          from: path.join(...value.sourcePath, f),
+          to: path.join(...value.destinationPath, f),
+        });
+      });
     }
-    return {
-      from: sourcePath,
-      to: destinationPath,
-    };
+    return fileCopies;
   });
   return new CopyPlugin({
-    patterns: copies,
+    patterns: _.flatMap(copies),
   });
 }
 
