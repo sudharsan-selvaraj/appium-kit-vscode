@@ -35,6 +35,12 @@ export class AddNewAppiumHomeCommand extends Command {
         placeHolder: 'Eg: MyPersonalProjectHome',
         prompt: 'Give a name to the appium home',
         value: '',
+        validateInput: (value) => {
+          if (existingPaths.some((p) => p.name === value)) {
+            return 'Name already exists';
+          }
+          return null;
+        },
       });
 
       if (!!name) {

@@ -58,9 +58,10 @@ export class AppiumEnvironmentService implements vscode.Disposable {
   }
 
   private async _discoverAppiumHomes() {
-    return [getDefaultAppiumHome(), this.dataStore.getAppiumHomes()]
+    return [this.dataStore.getAppiumHomes()]
       .flatMap((entry) => entry)
-      .filter((home) => fs.existsSync(home.path));
+      .filter((home) => fs.existsSync(home.path) && fs.statSync(home.path).isDirectory())
+      .concat(getDefaultAppiumHome());
   }
 
   async refreshAppiumEnvironment() {
