@@ -22,18 +22,25 @@ export class ConfigtreeItem extends vscode.TreeItem {
     );
 
     this.iconPath = ICON_APPIUM;
-    this.description = `/${this.getDescription(config)}`;
+    this.description = `${this._getDescription(config)}`;
     this.command = {
       title: 'Open file',
       command: 'vscode.open',
       arguments: [config.uri],
     };
+
+    this.contextValue = this._getContextValue(config);
   }
 
-  getDescription(config: ConfigFile) {
+  _getDescription(config: ConfigFile) {
     return vscode.workspace
       .asRelativePath(config.uri)
       .replace(path.basename(config.uri.fsPath), '');
+  }
+
+  _getContextValue(config: ConfigFile) {
+    const validState = config.isValid ? 'valid' : 'invalid';
+    return [validState].join();
   }
 }
 

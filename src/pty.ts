@@ -2,7 +2,7 @@ import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import * as vscode from 'vscode';
 import { EventEmitter } from 'events';
 
-export interface ProcessHandler {
+export interface PtyProcessHandler {
   onStarted?: (process: ChildProcess, teminal: vscode.Terminal) => void;
   onError?: (data: Error) => string;
   onStdout?: (data: Buffer) => string;
@@ -12,13 +12,24 @@ export interface ProcessHandler {
   onUserInput?: (input: string) => void;
 }
 
+class NormalizingEventEmitter extends vscode.EventEmitter<string> {
+  public fire(data: string) {
+    super.fire(data.replace(/\n/g, '\r\n'));
+  }
+
+  public log(data: string) {
+    this.fire(`${data}\r\n`);
+  }
+}
+
 export interface TerminalProcessOptions extends SpawnOptions {
   killOnTerminalClosed?: boolean;
+  killOnUserInput?: boolean;
   args?: string[];
 }
 
 export class Pty extends EventEmitter implements vscode.Pseudoterminal {
-  private writeEmitter = new vscode.EventEmitter<string>();
+  private writeEmitter = new NormalizingEventEmitter();
   public onDidWrite = this.writeEmitter.event;
   private process!: ChildProcess;
   private terminal!: vscode.Terminal;
@@ -28,7 +39,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
     private terminalName: string,
     private cmd: string,
     private options: TerminalProcessOptions,
-    private handler: ProcessHandler
+    private handler: PtyProcessHandler
   ) {
     super();
   }
@@ -44,7 +55,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       if (this.handler.onStdout) {
         this.writeEmitter.fire(this.handler.onStdout(data));
       } else {
-        this.writeEmitter.fire(data.toString().replace(/\n/g, '\r\n'));
+        this.writeEmitter.fire(data.toString());
       }
     });
 
@@ -52,7 +63,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       if (this.handler.onStdErr) {
         this.writeEmitter.fire(this.handler.onStdErr(data));
       } else {
-        this.writeEmitter.fire(data.toString().replace(/\n/g, '\r\n'));
+        this.writeEmitter.fire(data.toString());
       }
     });
 
@@ -60,7 +71,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       if (this.handler.onError) {
         this.writeEmitter.fire(this.handler.onError(data));
       } else {
-        this.writeEmitter.fire(data.toString().replace(/\n/g, '\r\n'));
+        this.writeEmitter.fire(data.toString());
       }
     });
 
@@ -109,6 +120,10 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       },
     });
 
-    this.terminal.show();
+    this.revealterminal();
+  }
+
+  public revealterminal() {
+    this.terminal?.show();
   }
 }

@@ -1,5 +1,5 @@
 import { Command } from './command';
-import { AppiumEnvironmentService } from '../services/appium-environment';
+import { AppiumEnvironmentService } from '../services/environment';
 
 export class RefreshAppiumInstancesCommand extends Command {
   // eslint-disable-next-line @typescript-eslint/naming-convention

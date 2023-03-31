@@ -38,3 +38,9 @@ export interface AppiumExtension {
 }
 
 export type ExtensionType = 'driver' | 'plugin';
+
+export enum AppiumServerSatus {
+  running,
+  starting,
+  stopped,
+}

@@ -59,6 +59,13 @@
           "when": "view == appium.view.environment",
           "group": "navigation"
         }
+      ],
+      "view/item/context": [
+        {
+          "command": "appium.server.start",
+          "when": "view == appium.view.configFiles && viewItem == valid",
+          "group": "inline"
+        }
       ]
     },
     "viewsContainers": {
@@ -76,6 +83,11 @@
         "title": "Refresh appium environment",
         "category": "Appium",
         "icon": "$(extensions-refresh)"
+      },
+      {
+        "command": "appium.server.start",
+        "title": "Start Server",
+        "icon": "$(debug-start)"
       }
     ],
     "configuration": {
@@ -109,6 +121,7 @@
     "@types/node": "16.x",
     "@types/semver": "^7.3.13",
     "@types/teen_process": "^2.0.0",
+    "@types/uuid": "^9.0.1",
     "@types/vscode": "^1.76.0",
     "@types/which": "^2.0.2",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
@@ -119,6 +132,7 @@
     "glob": "^8.1.0",
     "mocha": "^10.2.0",
     "ts-loader": "^9.4.2",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.5",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1",
@@ -127,15 +141,20 @@
   "dependencies": {
     "@appium/support": "^3.1.8",
     "@bendera/vscode-webview-elements": "^0.12.0",
+    "@types/get-port": "^4.2.0",
+    "@types/http-proxy": "^1.17.10",
     "@vscode/codicons": "^0.0.32",
     "common-tags": "^1.8.2",
     "eventemitter2": "^6.4.9",
     "execa": "^7.1.1",
+    "get-port": "^6.1.2",
     "handlebars": "^4.7.7",
+    "http-proxy": "^1.18.1",
     "lodash": "^4.17.21",
     "lokijs": "^1.5.12",
     "semver": "^7.3.8",
     "teen_process": "^2.0.2",
+    "uuid": "^9.0.0",
     "which": "^3.0.0",
     "yaml": "^2.2.1"
   }
