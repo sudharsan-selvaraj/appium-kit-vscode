@@ -13,6 +13,11 @@ import { RefreshAppiumInstancesCommand } from '../../commands/refresh-appium-ins
 import { AddNewAppiumHomeCommand } from '../../commands/add-new-appium-home';
 import { AppiumBinaryChangedEvent } from '../../events/appium-binary-changed-event';
 import { AppiumBinaryUpdatedEvent } from '../../events/appium-binary-updated-event';
+import { DataStore } from '../../db/data-store';
+import {
+  DeleteAppiumHomeCommand,
+  DeleteAppiumHomeOptions,
+} from '../../commands/delete-appium-home';
 
 export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvider {
   private webview!: vscode.Webview;
@@ -24,7 +29,7 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
   private versionSelectTemplate!: handlebar.TemplateDelegate;
   private appiumHomeSelectTemplate!: handlebar.TemplateDelegate;
 
-  constructor(context: ExtensionContext, private eventBus: EventBus) {
+  constructor(context: ExtensionContext, private eventBus: EventBus, private dataStore: DataStore) {
     super(context, 'appium-environment', ['appium-environment.js'], []);
     this.eventBus.addListener(
       AppiumBinaryUpdatedEvent.listener(this._appiumBinaryUpdated.bind(this))
@@ -48,45 +53,50 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
     //not required
   }
 
+  private _changeDefaultAppiumHome(selectedHome: AppiumHome) {
+    if (!this.activeAppiumHome || this.activeAppiumHome.path !== selectedHome.path) {
+      this.activeAppiumHome = selectedHome;
+      this.dataStore.setActiveAppiumHome(this.activeAppiumHome);
+      this.eventBus.fire(new AppiumHomeChangedEvent(this.activeAppiumHome));
+    }
+  }
+
+  private _changeDefaultAppiumBinary(selectedBinary: AppiumBinary) {
+    if (!this.activeAppiumBinary || this.activeAppiumBinary.path !== selectedBinary.path) {
+      this.activeAppiumBinary = selectedBinary;
+      this.dataStore.setActiveAppiumBinary(this.activeAppiumBinary);
+      this.eventBus.fire(new AppiumBinaryChangedEvent(selectedBinary));
+    }
+  }
+
+  private _addNewAppiumHome() {
+    vscode.commands.executeCommand(AddNewAppiumHomeCommand.NAME);
+  }
+
+  private _deleteAppiumHome() {
+    vscode.commands.executeCommand(DeleteAppiumHomeCommand.NAME, [
+      <DeleteAppiumHomeOptions>{ appiumHome: this.activeAppiumHome },
+    ]);
+  }
+
   onViewLoaded(webview: Webview) {
     this.webview = webview;
     this.webview.onDidReceiveMessage((event) => {
       switch (event.type) {
         case 'select-appium-version':
-          const appiumInstances = DatabaseService.getAppiumInstances();
-          if (
-            _.isNil(this.activeAppiumInstance) ||
-            this.activeAppiumInstance.path !== appiumInstances[event.index].path
-          ) {
-            this.activeAppiumInstance = appiumInstances[event.index];
-            this.emitAppiumVersionChanged();
-          }
-
+          this._changeDefaultAppiumBinary(this.appiumBinaries[event.index]);
           break;
         case 'select-appium-home':
-          const appiumHomes = DatabaseService.getAppiumHomes();
-          if (
-            _.isNil(this.activeAppiumHome) ||
-            this.activeAppiumHome.path !== appiumHomes[event.index].path
-          ) {
-            this.activeAppiumHome = appiumHomes[event.index];
-            this.emitAppiumHomeChanged();
-          }
-
+          this._changeDefaultAppiumHome(this.appiumHomes[event.index]);
           break;
         case 'add-new-appium-home':
-          this.addNewAppiumHome();
+          this._addNewAppiumHome();
+          break;
+        case 'delete-appium-home':
+          this._deleteAppiumHome();
           break;
       }
     });
-  }
-
-  private addNewAppiumHome() {
-    vscode.commands.executeCommand(AddNewAppiumHomeCommand.NAME);
-  }
-
-  private emitAppiumVersionChanged() {
-    this.eventBus.fire(new AppiumVersionChangedEvent(this.activeAppiumInstance as AppiumInstance));
   }
 
   getWebViewHtml(webview: Webview) {
@@ -104,10 +114,9 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
       );
     }
     return this.versionSelectTemplate({
-      instances: this.appiumInstances.map((instance) => ({
-        ...instance,
-        selected:
-          this.activeAppiumInstance !== null && instance.path === this.activeAppiumInstance?.path,
+      instances: this.appiumBinaries.map((binary) => ({
+        ...binary,
+        selected: this.activeAppiumBinary !== null && binary.path === this.activeAppiumBinary?.path,
       })),
     });
   }
@@ -139,8 +148,7 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
   async _appiumHomeUpdated(newHomes: AppiumHome[]) {
     this.appiumHomes = newHomes;
     if (!!this.activeAppiumHome || !newHomes.some((h) => h.path === this.activeAppiumHome?.path)) {
-      this.activeAppiumHome = newHomes[0];
-      this.eventBus.fire(new AppiumHomeChangedEvent(this.activeAppiumHome));
+      this._changeDefaultAppiumHome(newHomes[0]);
       this.refreshView();
     }
   }
@@ -151,8 +159,7 @@ export class AppiumEnvironmentWebView extends BaseWebView implements ViewProvide
       !!this.activeAppiumBinary ||
       !binaries.some((b) => b.path === this.activeAppiumBinary?.path)
     ) {
-      this.activeAppiumBinary = binaries[0];
-      this.eventBus.fire(new AppiumBinaryChangedEvent(this.activeAppiumBinary));
+      this._changeDefaultAppiumBinary(binaries[0]);
       this.refreshView();
     }
   }

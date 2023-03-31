@@ -1,11 +1,12 @@
 import { Command } from './command';
 import { EventBus } from '../events/event-bus';
 import { Pty } from '../pty';
-import { AppiumHome, AppiumBinary, ExtensionType } from '../types';
+import { AppiumBinary, ExtensionType } from '../types';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import _ = require('lodash');
 import { AppiumExtensionUpdatedEvent } from '../events/appium-extension-updated-event';
+import { DataStore } from '../db/data-store';
 
 export interface UpdateExtensionOptions {
   type: ExtensionType;
@@ -20,15 +21,21 @@ export class UpdateAppiumExtensionCommand extends Command {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public static readonly NAME = 'appium.extension.update';
 
-  constructor(private eventBus: EventBus) {
+  constructor(private eventBus: EventBus, private dataStore: DataStore) {
     super(UpdateAppiumExtensionCommand.NAME);
   }
 
-  public async excute(argss: [AppiumHome, AppiumBinary, UpdateExtensionOptions]) {
-    const [appiumHome, appiumInstance, options] = [...argss];
+  public async excute(argss: [UpdateExtensionOptions]) {
+    const [options] = [...argss];
+    const appiumBinary = this.dataStore.getActiveAppiumBinary();
+    const appiumHome = this.dataStore.getActiveAppiumHome();
+    if (!appiumBinary || !appiumHome) {
+      return;
+    }
+
     let unsafe = await this.isUnsafeUpdate(options.versions);
 
-    const args = [appiumInstance.executable as string, options.type, 'update', options.name];
+    const args = [appiumBinary.executable as string, options.type, 'update', options.name];
 
     if (!!unsafe) {
       args.push('--unsafe');

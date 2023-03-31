@@ -18,15 +18,15 @@
     "views": {
       "appium": [
         {
-          "id": "appium.view.environment",
-          "type": "webview",
-          "name": "Environment",
-          "when": "appium.configured == true"
-        },
-        {
           "id": "appium.view.configFiles",
           "type": "tree",
           "name": "Config Files",
+          "when": "appium.configured == true"
+        },
+        {
+          "id": "appium.view.environment",
+          "type": "webview",
+          "name": "Environment",
           "when": "appium.configured == true"
         },
         {

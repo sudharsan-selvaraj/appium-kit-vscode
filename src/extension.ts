@@ -22,36 +22,37 @@ import { UnInstallAppiumExtensionCommand } from './commands/uninstall-appium-ext
 import { UpdateAppiumExtensionCommand } from './commands/update-appium-extension';
 import { DataStore } from './db/data-store';
 import { initializeDb } from './db';
+import { DeleteAppiumHomeCommand } from './commands/delete-appium-home';
 
 let disposables: vscode.Disposable[] = [];
 
 export async function activate(context: vscode.ExtensionContext) {
-  const collections = initializeDb(context);
+  const collections = await initializeDb(context);
   const datastore = new DataStore(collections);
   const eventBus = new EventBus();
   const stateManager = new StateManager();
   const workspace = new VscodeWorkspace(context);
-
-  const appiumEnvironmentService = await new AppiumEnvironmentService(
+  const appiumEnvironmentService = new AppiumEnvironmentService(
     stateManager,
     datastore,
     workspace,
     eventBus
-  ).initialize();
+  );
 
   CommandManager.registerCommands([
     new OpenSettingsCommand(),
     new RefreshAppiumInstancesCommand(appiumEnvironmentService),
     new AddNewAppiumHomeCommand(eventBus, datastore),
-    new InstallAppiumExtensionCommand(eventBus),
-    new UnInstallAppiumExtensionCommand(eventBus),
-    new UpdateAppiumExtensionCommand(eventBus),
+    new InstallAppiumExtensionCommand(eventBus, datastore),
+    new UnInstallAppiumExtensionCommand(eventBus, datastore),
+    new UpdateAppiumExtensionCommand(eventBus, datastore),
+    new DeleteAppiumHomeCommand(eventBus, datastore),
   ]);
 
-  const welcomeViewProvider = new WelcomeWebview(context, eventBus);
+  const welcomeViewProvider = new WelcomeWebview(context, eventBus, datastore);
   const configViewProvider = new ConfigViewProvider();
-  const environmentViewProvider = new AppiumEnvironmentWebView(context, eventBus);
-  const appiumExtensionsView = new AppiumExtensionsWebView(context, eventBus);
+  const environmentViewProvider = new AppiumEnvironmentWebView(context, eventBus, datastore);
+  const appiumExtensionsView = new AppiumExtensionsWebView(context, eventBus, datastore);
 
   /* Initialize Views */
   disposables = [
@@ -60,6 +61,8 @@ export async function activate(context: vscode.ExtensionContext) {
     await environmentViewProvider.register(APPIUM_ENVIRONMENT_VIEW, context),
     await appiumExtensionsView.register(APPIUM_EXTENSIONS_VIEW, context),
   ];
+
+  await appiumEnvironmentService.initialize();
 }
 
 export function deactivate() {

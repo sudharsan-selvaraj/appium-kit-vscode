@@ -54,10 +54,7 @@ export abstract class BaseWebView implements WebviewViewProvider {
       <html lang="en">
         <head>
           <meta charset="UTF-8" />
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
-          />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>Appium Server Editor</title>
           <meta
             http-equiv="Content-Security-Policy"
@@ -68,23 +65,13 @@ export abstract class BaseWebView implements WebviewViewProvider {
         style-src 'unsafe-inline' ${cspSource};
         style-src-elem 'unsafe-inline' ${cspSource};
         font-src ${cspSource};
-      "
-          />
-          <link
-            rel="stylesheet"
-            href="${cssLib}"
-            nonce="${nonce}"
-            id="vscode-codicon-stylesheet"
-          />
+      " />
+          <link rel="stylesheet" href="${cssLib}" nonce="${nonce}" id="vscode-codicon-stylesheet" />
           ${this.getCssFile(nonce, webview)}
         </head>
         <body>
           ${html`${body}`}
-          <script
-            src="${componentLib}"
-            nonce="${nonce}"
-            type="module"
-          ></script>
+          <script src="${componentLib}" nonce="${nonce}" type="module"></script>
           ${this.getJsFile(nonce, webview)}
         </body>
       </html>

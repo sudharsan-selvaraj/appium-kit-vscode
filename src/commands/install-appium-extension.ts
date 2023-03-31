@@ -1,11 +1,12 @@
 import { Command } from './command';
 import { EventBus } from '../events/event-bus';
 import { Pty } from '../pty';
-import { AppiumHome, AppiumInstance, ExtensionType } from '../types';
+import { AppiumHome, AppiumBinary, ExtensionType } from '../types';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import _ = require('lodash');
 import { AppiumExtensionUpdatedEvent } from '../events/appium-extension-updated-event';
+import { DataStore } from '../db/data-store';
 
 export interface InstallExtensionOptions {
   type: ExtensionType;
@@ -15,12 +16,17 @@ export class InstallAppiumExtensionCommand extends Command {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public static readonly NAME = 'appium.extension.install';
 
-  constructor(private eventBus: EventBus) {
+  constructor(private eventBus: EventBus, private dataStore: DataStore) {
     super(InstallAppiumExtensionCommand.NAME);
   }
 
-  public async excute(argss: [AppiumHome, AppiumInstance, InstallExtensionOptions]) {
-    const [appiumHome, appiumInstance, options] = [...argss];
+  public async excute(argss: [InstallExtensionOptions]) {
+    const [options] = [...argss];
+    const appiumBinary = this.dataStore.getActiveAppiumBinary();
+    const appiumHome = this.dataStore.getActiveAppiumHome();
+    if (!appiumBinary || !appiumHome) {
+      return;
+    }
     const installationSpec = await this.getInstallationSpec(options.type);
 
     if (_.isNil(installationSpec)) {
@@ -28,7 +34,7 @@ export class InstallAppiumExtensionCommand extends Command {
     }
 
     const args = [
-      appiumInstance.executable as string,
+      appiumBinary.executable as string,
       options.type,
       'install',
       installationSpec.name,
@@ -53,7 +59,9 @@ export class InstallAppiumExtensionCommand extends Command {
       },
       {
         onStarted: () => {
-          pty.write(`* Installing ${installationSpec.name} ${options.type}`);
+          pty.write(
+            `* Installing ${installationSpec.name} ${options.type} in path ${appiumHome.path}`
+          );
           pty.write(`> node ${args.join(' ')}`);
         },
         onComplete: () => {

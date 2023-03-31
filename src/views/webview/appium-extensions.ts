@@ -16,7 +16,10 @@ import {
   UnInstallAppiumExtensionCommand,
   UnInstallExtensionOptions,
 } from '../../commands/uninstall-appium-extension';
-import { UpdateAppiumExtensionCommand } from '../../commands/update-appium-extension';
+import {
+  UpdateAppiumExtensionCommand,
+  UpdateExtensionOptions,
+} from '../../commands/update-appium-extension';
 import { DataStore } from '../../db/data-store';
 import { AppiumBinaryUpdatedEvent } from '../../events/appium-binary-updated-event';
 
@@ -85,8 +88,6 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
   onViewLoaded(webview: vscode.Webview) {
     this.webview = webview;
     this.webview.onDidReceiveMessage((event) => {
-      const binary = this.dataStore.getActiveAppiumBinary();
-
       switch (event.type) {
         case 'install-extension':
           this._installExtenstion(event.extensionType);
@@ -143,9 +144,9 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
     if (!!extension) {
       extension.isUpdating = true;
     }
-    const version = !!extension?.version ? JSON.parse(extension.version) : {};
+    const versions = !!extension?.updates ? extension.updates : {};
     vscode.commands.executeCommand(UpdateAppiumExtensionCommand.NAME, [
-      { name: name, type: type, version },
+      <UpdateExtensionOptions>{ name: name, type: type, versions },
     ]);
     this._setLoading(false);
   }
@@ -259,7 +260,6 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
 
   private async _loadExtensions() {
     this._setLoading(true);
-    this.activeTab = 'driver';
 
     const appiumHome = _.clone(this.appiumHome);
     if (!this.appiumBinary) {

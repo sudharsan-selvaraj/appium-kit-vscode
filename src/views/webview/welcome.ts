@@ -3,20 +3,21 @@ import { BaseWebView } from './base-webview';
 import * as vscode from 'vscode';
 import _ = require('lodash');
 import { ViewProvider } from '../view-provider';
-import { OpenSettingsCommand } from '../../commands/open-settings';
 import { EventBus } from '../../events/event-bus';
-import { AppiumInstanceUpdatedEvent } from '../../events/appium-binary-updated-event';
-import { AppiumInstance } from '../../types';
-import { DatabaseService } from '../../db';
 import { RefreshAppiumInstancesCommand } from '../../commands/refresh-appium-instances';
+import { AppiumBinaryUpdatedEvent } from '../../events/appium-binary-updated-event';
+import { AppiumBinary } from '../../types';
+import { DataStore } from '../../db/data-store';
 
 export class WelcomeWebview extends BaseWebView implements ViewProvider {
   public static readonly jsFiles = ['welcome-webview.js'];
   private webview!: vscode.Webview;
 
-  constructor(context: ExtensionContext, private eventBus: EventBus) {
+  constructor(context: ExtensionContext, private eventBus: EventBus, private dataStore: DataStore) {
     super(context, 'welcome', WelcomeWebview.jsFiles, []);
-    this.eventBus.addListener(AppiumInstanceUpdatedEvent.listener(this.onAppiumInstanceUpdated.bind(this)));
+    this.eventBus.addListener(
+      AppiumBinaryUpdatedEvent.listener(this._onAppiumInstanceUpdated.bind(this))
+    );
   }
 
   async register(viewId: string, context: ExtensionContext): Promise<ViewProvider> {
@@ -24,8 +25,8 @@ export class WelcomeWebview extends BaseWebView implements ViewProvider {
     return this;
   }
 
-  async onAppiumInstanceUpdated(appiumInstances: AppiumInstance[]) {
-    await this.updateWebView(appiumInstances);
+  async _onAppiumInstanceUpdated(appiumBinaries: AppiumBinary[]) {
+    await this.updateWebView(appiumBinaries);
   }
 
   dispose() {
@@ -48,8 +49,8 @@ export class WelcomeWebview extends BaseWebView implements ViewProvider {
     this.updateView('appiumVersionNotSupported', data);
   }
 
-  async updateWebView(appiumInstances: AppiumInstance[]) {
-    if (_.isEmpty(appiumInstances)) {
+  async updateWebView(appiumBinaries: AppiumBinary[]) {
+    if (_.isEmpty(appiumBinaries)) {
       this.webview?.postMessage({
         type: 'update_view',
         section: 'appiumNotFound',
@@ -63,13 +64,10 @@ export class WelcomeWebview extends BaseWebView implements ViewProvider {
       switch (event.type) {
         case 'ready':
           this.showLoadingView();
-          this.updateWebView(DatabaseService.getAppiumInstances());
+          this.updateWebView(this.dataStore.getAppiumBinaries());
           break;
         case 'refresh':
           vscode.commands.executeCommand(RefreshAppiumInstancesCommand.NAME);
-          break;
-        case 'openSettings':
-          vscode.commands.executeCommand(OpenSettingsCommand.NAME);
           break;
       }
     });

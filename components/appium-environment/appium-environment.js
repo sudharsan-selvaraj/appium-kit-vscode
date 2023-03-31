@@ -40,5 +40,11 @@
         type: 'add-new-appium-home',
       });
     });
+
+    document.getElementById('delete-appium-home').addEventListener('click', () => {
+      vscode.postMessage({
+        type: 'delete-appium-home',
+      });
+    });
   });
 })();

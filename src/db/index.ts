@@ -1,4 +1,5 @@
 import * as loki from 'lokijs';
+import * as path from 'path';
 import _ = require('lodash');
 import { ExtensionContext } from 'vscode';
 import { AppiumHome, AppiumBinary } from '../types';
@@ -9,24 +10,25 @@ export interface DatabaseCollections {
   appiumBinary: Collection<AppiumBinary>;
 }
 
-function initializeDb(context: ExtensionContext): DatabaseCollections {
-  const adapter = new lfsa();
-  const collections: any = {};
+function initializeDb(context: ExtensionContext): Promise<DatabaseCollections> {
+  return new Promise((resolve) => {
+    const adapter = new lfsa();
+    const collections: any = {};
 
-  const database = new loki('appium-kit.db', {
-    adapter: adapter,
-    autoload: true,
-    autoloadCallback: () => {
-      ['appiumHome', 'appiumInstance'].forEach((table) => {
-        collections[table as keyof DatabaseCollections] =
-          database.getCollection(table) || database.addCollection(table);
-      });
-    },
-    autosave: true,
-    autosaveInterval: 4000,
+    const database = new loki(path.join(context.extensionUri.fsPath, 'appium-kit.db'), {
+      adapter: adapter,
+      autoload: true,
+      autoloadCallback: () => {
+        ['appiumHome', 'appiumBinary'].forEach((table) => {
+          collections[table as keyof DatabaseCollections] =
+            database.getCollection(table) || database.addCollection(table);
+        });
+        resolve(collections);
+      },
+      autosave: true,
+      autosaveInterval: 4000,
+    });
   });
-
-  return collections;
 }
 
 export { initializeDb };

@@ -1,8 +1,9 @@
 import { Command } from './command';
 import { EventBus } from '../events/event-bus';
 import { Pty } from '../pty';
-import { AppiumHome, AppiumInstance, ExtensionType } from '../types';
+import { AppiumHome, AppiumBinary, ExtensionType } from '../types';
 import { AppiumExtensionUpdatedEvent } from '../events/appium-extension-updated-event';
+import { DataStore } from '../db/data-store';
 
 export interface UnInstallExtensionOptions {
   name: string;
@@ -13,14 +14,18 @@ export class UnInstallAppiumExtensionCommand extends Command {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public static readonly NAME = 'appium.extension.uninstall';
 
-  constructor(private eventBus: EventBus) {
+  constructor(private eventBus: EventBus, private dataStore: DataStore) {
     super(UnInstallAppiumExtensionCommand.NAME);
   }
 
-  public async excute(argss: [AppiumHome, AppiumInstance, UnInstallExtensionOptions]) {
-    const [appiumHome, appiumInstance, options] = [...argss];
-
-    const args = [appiumInstance.executable as string, options.type, 'uninstall', options.name];
+  public async excute(argss: [UnInstallExtensionOptions]) {
+    const [options] = [...argss];
+    const appiumBinary = this.dataStore.getActiveAppiumBinary();
+    const appiumHome = this.dataStore.getActiveAppiumHome();
+    if (!appiumBinary || !appiumHome) {
+      return;
+    }
+    const args = [appiumBinary.executable as string, options.type, 'uninstall', options.name];
 
     const pty = new Pty(
       `Uninstall ${options.name} ${options.type}`,
@@ -35,7 +40,7 @@ export class UnInstallAppiumExtensionCommand extends Command {
       },
       {
         onStarted: () => {
-          pty.write(`* Uninstalling ${options.name} ${options.type}`);
+          pty.write(`* Uninstalling ${options.name} ${options.type} in path ${appiumHome.path}`);
           pty.write(`> node ${args.join(' ')}`);
         },
         onComplete: () => {

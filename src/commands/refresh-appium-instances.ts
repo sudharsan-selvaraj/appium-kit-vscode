@@ -10,6 +10,6 @@ export class RefreshAppiumInstancesCommand extends Command {
   }
 
   public async excute() {
-    await this.appiumEnvironmentService.refresh();
+    await this.appiumEnvironmentService.refreshAppiumEnvironment();
   }
 }

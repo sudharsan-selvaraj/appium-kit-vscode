@@ -1,6 +1,7 @@
 import { DatabaseCollections } from '.';
 import { AppiumBinary, AppiumHome } from '../types';
 import _ = require('lodash');
+import { diff } from 'semver';
 
 export class DataStore {
   constructor(private collections: DatabaseCollections) {}
@@ -9,7 +10,7 @@ export class DataStore {
     return this.collections.appiumHome.find();
   }
 
-  getDefaultAppiumHome(): AppiumHome | null {
+  getActiveAppiumHome(): AppiumHome | null {
     return this.collections.appiumHome.findOne({
       isActive: true,
     });
@@ -29,26 +30,31 @@ export class DataStore {
     this.collections.appiumHome.insert(home);
   }
 
+  public deleteAppiumHome(home: AppiumHome) {
+    this.collections.appiumHome
+      .chain()
+      .find({
+        path: home.path,
+      })
+      .remove();
+  }
+
   public updateAppiumHome(home: AppiumHome[]) {
-    const changed = _.differenceWith(this.collections.appiumHome.find(), home, this._pathPredicate);
+    const changed = this._differenceWith(this.collections.appiumHome.find(), home, 'path');
     if (changed.length) {
       this.collections.appiumHome.chain().remove();
       this.collections.appiumHome.insert(home);
     }
-    return changed.length;
+    return !!changed.length;
   }
 
   public updateAppiumBinary(binaries: AppiumBinary[]) {
-    const changed = _.differenceWith(
-      this.collections.appiumBinary.find(),
-      binaries,
-      this._pathPredicate
-    );
+    const changed = this._differenceWith(this.collections.appiumBinary.find(), binaries, 'path');
     if (changed.length) {
       this.collections.appiumBinary.chain().remove();
       this.collections.appiumBinary.insert(binaries);
     }
-    return changed.length;
+    return !!changed.length;
   }
 
   public setActiveAppiumBinary(activeBinary: AppiumBinary) {
@@ -58,12 +64,18 @@ export class DataStore {
   }
 
   public setActiveAppiumHome(activeHome: AppiumHome) {
-    this.collections.appiumBinary.chain().update((home) => {
+    this.collections.appiumHome.chain().update((home) => {
       home.isActive = this._pathPredicate(home, activeHome);
     });
   }
 
   private _pathPredicate(a: { path: string }, b: { path: string }): boolean {
     return a.path === b.path;
+  }
+
+  private _differenceWith(a1: Array<any>, a2: Array<any>, prop: any) {
+    const diff1 = a1.filter((o1) => a2.filter((o2) => o2[prop] === o1[prop]).length === 0);
+    const diff2 = a2.filter((o1) => a1.filter((o2) => o2[prop] === o1[prop]).length === 0);
+    return _.flatMap([diff1, diff2]);
   }
 }

@@ -21,7 +21,7 @@ import { RefreshAppiumEnvironmentEvent } from '../events/refresh-appium-environm
 const APPIUM_NODE_MODULE_RELATIVE_PATH = 'node_modules/appium';
 
 export class AppiumEnvironmentService implements vscode.Disposable {
-  private isEnvironmentReady = false;
+  private _isEnvironmentInitialized = false;
 
   constructor(
     private stateManager: StateManager,
@@ -31,23 +31,24 @@ export class AppiumEnvironmentService implements vscode.Disposable {
   ) {
     this.eventBus.addListener(
       RefreshAppiumEnvironmentEvent.listener(async () => {
-        await this.refresh();
+        await this.refreshAppiumEnvironment();
       })
     );
   }
 
   async initialize() {
-    await this._refreshAppiumEnvironment();
+    this.stateManager.appiumNotConfigured();
+    await this.refreshAppiumEnvironment();
     return this;
   }
 
   private async _updateState(appiumBinaries: AppiumBinary[]) {
     if (_.isEmpty(appiumBinaries)) {
       this.stateManager.appiumNotConfigured();
-      this.isEnvironmentReady = false;
-    } else if (!this.isEnvironmentReady) {
+      this._isEnvironmentInitialized = false;
+    } else if (!this._isEnvironmentInitialized) {
       this.stateManager.appiumConfigured();
-      this.isEnvironmentReady = true;
+      this._isEnvironmentInitialized = true;
     }
   }
 
@@ -57,10 +58,12 @@ export class AppiumEnvironmentService implements vscode.Disposable {
   }
 
   private async _discoverAppiumHomes() {
-    return [getDefaultAppiumHome(), this.dataStore.getAppiumHomes()].flatMap((entry) => entry);
+    return [getDefaultAppiumHome(), this.dataStore.getAppiumHomes()]
+      .flatMap((entry) => entry)
+      .filter((home) => fs.existsSync(home.path));
   }
 
-  private async _refreshAppiumEnvironment() {
+  async refreshAppiumEnvironment() {
     const [newBinaries, newHomes] = await Promise.all([
       this._discoverAppiumBinaries(),
       this._discoverAppiumHomes(),
@@ -68,14 +71,15 @@ export class AppiumEnvironmentService implements vscode.Disposable {
 
     const isHomeChanged = this.dataStore.updateAppiumHome(newHomes);
     const isBinaryChanged = this.dataStore.updateAppiumBinary(newBinaries);
-    if (isBinaryChanged) {
-      this._updateState(newBinaries);
+
+    if (isHomeChanged || !this._isEnvironmentInitialized) {
+      this.eventBus.fire(new AppiumHomeUpdatedEvent(this.dataStore.getAppiumHomes()));
     }
 
-    return {
-      isHomeChanged,
-      isBinaryChanged,
-    };
+    if (isBinaryChanged || !this._isEnvironmentInitialized) {
+      this.eventBus.fire(new AppiumBinaryUpdatedEvent(this.dataStore.getAppiumBinaries()));
+    }
+    this._updateState(newBinaries);
   }
 
   private async discoverGlobalAppium(): Promise<AppiumBinary | null> {
@@ -113,15 +117,6 @@ export class AppiumEnvironmentService implements vscode.Disposable {
     } catch (err) {
       return null;
     }
-  }
-
-  async refresh() {
-    const { isHomeChanged, isBinaryChanged } = await this._refreshAppiumEnvironment();
-
-    isHomeChanged &&
-      this.eventBus.fire(new AppiumHomeUpdatedEvent(this.dataStore.getAppiumHomes()));
-    isBinaryChanged &&
-      this.eventBus.fire(new AppiumBinaryUpdatedEvent(this.dataStore.getAppiumBinaries()));
   }
 
   dispose() {

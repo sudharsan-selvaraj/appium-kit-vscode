@@ -52,6 +52,9 @@ const extensionConfig = {
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
     extensions: ['.ts', '.js'],
+    alias: {
+      handlebars: path.resolve(__dirname, 'node_modules', 'handlebars', 'dist', 'handlebars.js'),
+    },
   },
 
   module: {
@@ -75,6 +78,9 @@ const extensionConfig = {
     copyNodeModulesFiles(),
     new webpack.IgnorePlugin({
       resourceRegExp: /spdx-(exceptions|license-ids)/,
+    }),
+    new webpack.WatchIgnorePlugin({
+      paths: [path.resolve(__dirname, 'dist')],
     }),
   ],
 };
