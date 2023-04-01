@@ -12,24 +12,24 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "activationevents": [
-    "workspaceContains:**/*{appiumrc.{json,yaml,yml,js,cjs}, appium.config.{js,cjs}, appiumrc}"
+    "**/*{appiumrc.json,appiumrc.yaml,appiumrc.yml,appiumrc,appium.conf.json,.appiumrc}"
   ],
   "contributes": {
     "views": {
       "appium": [
-        {
-          "id": "appium.view.configFiles",
-          "type": "tree",
-          "name": "Config Files",
-          "when": "appium.configured == true",
-          "initialSize": 0.5
-        },
         {
           "id": "appium.view.environment",
           "type": "webview",
           "name": "Environment",
           "when": "appium.configured == true",
           "initialSize": 1
+        },
+        {
+          "id": "appium.view.configFiles",
+          "type": "tree",
+          "name": "Config Files",
+          "when": "appium.configured == true",
+          "initialSize": 0.5
         },
         {
           "id": "appium.view.extensions",
@@ -62,8 +62,18 @@
       ],
       "view/item/context": [
         {
+          "command": "appium.config.create-new",
+          "when": "view == appium.view.configFiles && viewItem == config-directory",
+          "group": "inline"
+        },
+        {
+          "command": "appium.config.delete",
+          "when": "view == appium.view.configFiles && viewItem =~ /config-file/",
+          "group": "inline"
+        },
+        {
           "command": "appium.server.start",
-          "when": "view == appium.view.configFiles && viewItem == valid",
+          "when": "view == appium.view.configFiles && viewItem == config-file-valid",
           "group": "inline"
         }
       ]
@@ -86,8 +96,21 @@
       },
       {
         "command": "appium.server.start",
-        "title": "Start Server",
+        "category": "Appium",
+        "title": "Start appium server",
         "icon": "$(debug-start)"
+      },
+      {
+        "command": "appium.config.create-new",
+        "category": "Appium",
+        "title": "Create new appium config",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "appium.config.delete",
+        "category": "Appium",
+        "title": "Delete config file",
+        "icon": "$(trash)"
       }
     ],
     "configuration": {
@@ -155,6 +178,7 @@
     "handlebars": "^4.7.7",
     "http-proxy": "^1.18.1",
     "http-proxy-middleware": "^2.0.6",
+    "lilconfig": "^2.1.0",
     "lodash": "^4.17.21",
     "lokijs": "^1.5.12",
     "semver": "^7.3.8",
