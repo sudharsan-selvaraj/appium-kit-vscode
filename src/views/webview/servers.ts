@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { ExtensionContext } from 'vscode';
 import { AppiumLocalServer } from '../../services/local-server';
-import { ConfigFile } from '../treeview/config-provider';
 import { ViewProvider } from '../view-provider';
 import { v4 as uuid } from 'uuid';
 import * as fs from 'fs';
@@ -9,6 +8,7 @@ import { isPortFree } from '../../utils/net';
 import { DataStore } from '../../db/data-store';
 import { AppiumBinary, AppiumHome } from '../../types';
 import { AppiumServerService } from '../../services/appium-proxy-server';
+import { ConfigFile } from '../treeview/config-files/config-tree-tems';
 
 const DEFAULT_APPIUM_PORT = 4723;
 const DEFAULT_APPIUM_ADDRESS = '0.0.0.0';
@@ -32,10 +32,10 @@ export class AppiumServerView implements ViewProvider {
       if (this._portOccupied(appiumOptions.port)) {
         const portFromUser = await this._getPortFromUser();
         if (!!portFromUser) {
-           this._startAppiumService(appiumOptions.address, portFromUser, config);
+          this._startAppiumService(appiumOptions.address, portFromUser, config);
         }
       } else {
-         this._startAppiumService(appiumOptions.address, appiumOptions.port, config);
+        this._startAppiumService(appiumOptions.address, appiumOptions.port, config);
       }
     } else {
       vscode.window.showErrorMessage('Selected config in not valid');

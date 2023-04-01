@@ -119,7 +119,7 @@ export class AppiumExtensionsWebView extends BaseWebView implements ViewProvider
   }
 
   private _findMatchingExtension(name: string, type: ExtensionType) {
-    return [...this.drivers, ...this.plugins].find((ext) => ext.type === type && ext.name === name);
+    return (type === 'driver' ? this.drivers : this.plugins).find((ext) => ext.name === name);
   }
 
   private _installExtenstion(type: ExtensionType) {

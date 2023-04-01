@@ -3,6 +3,8 @@ import * as path from 'path';
 import _ = require('lodash');
 import { ExtensionContext } from 'vscode';
 import { AppiumHome, AppiumBinary } from '../types';
+import { EXTENSIONS_FILES_RETAIVE_PATH } from '../constants';
+import * as fs from 'fs';
 const lfsa = require('lokijs/src/loki-fs-structured-adapter');
 
 export interface DatabaseCollections {
@@ -10,12 +12,17 @@ export interface DatabaseCollections {
   appiumBinary: Collection<AppiumBinary>;
 }
 
+const RELATIVE_DB_PATH = path.join(EXTENSIONS_FILES_RETAIVE_PATH, 'database');
+
 function initializeDb(context: ExtensionContext): Promise<DatabaseCollections> {
   return new Promise((resolve) => {
     const adapter = new lfsa();
     const collections: any = {};
-
-    const database = new loki(path.join(context.extensionUri.fsPath, 'appium-kit.db'), {
+    const pathToDataBase = path.join(context.extensionUri.fsPath, RELATIVE_DB_PATH);
+    if (!fs.existsSync(pathToDataBase)) {
+      fs.mkdirSync(pathToDataBase, { recursive: true });
+    }
+    const database = new loki(path.join(pathToDataBase, 'appium-kit.db'), {
       adapter: adapter,
       autoload: true,
       autoloadCallback: () => {
@@ -32,63 +39,3 @@ function initializeDb(context: ExtensionContext): Promise<DatabaseCollections> {
 }
 
 export { initializeDb };
-
-// export class DatabaseService {
-// 	constructor(context: ExtensionContext) {}
-
-// 	async initialize() {}
-
-// 	public getAppiumInstances() {
-// 		return appiumInstanceCollection.find();
-// 	}
-
-// 	public getAppiumHomes() {
-// 		return appiumHomeCollection.find();
-// 	}
-
-// 	public getActiveAppiumInstance() {
-// 		return appiumInstanceCollection.findOne({
-// 			isActive: true,
-// 		});
-// 	}
-
-// 	public getActiveAppiumHome() {
-// 		return appiumHomeCollection.findOne({
-// 			isActive: true,
-// 		});
-// 	}
-
-// 	public insertAppiumInstance(
-// 		appiumInstances: AppiumInstance[] | AppiumInstance,
-// 		options: { reset: boolean } = { reset: false }
-// 	) {
-// 		if (!_.isArray(appiumInstances)) {
-// 			appiumInstances = [appiumInstances];
-// 		}
-// 		if (!!options.reset) {
-// 			appiumInstanceCollection.chain().remove();
-// 		}
-// 		return appiumInstanceCollection.insert(
-// 			appiumInstances.map((instance) => {
-// 				delete (instance as any)['$loki'];
-// 				return instance;
-// 			})
-// 		);
-// 	}
-
-// 	public insertAppiumHome(appiumHomes: AppiumHome[] | AppiumHome, options: { reset: boolean } = { reset: false }) {
-// 		if (!_.isArray(appiumHomes)) {
-// 			appiumHomes = [appiumHomes];
-// 		}
-
-// 		if (!!options.reset) {
-// 			appiumHomeCollection.chain().find().remove();
-// 		}
-// 		return appiumHomeCollection.insert(
-// 			appiumHomes.map((home) => {
-// 				delete (home as any)['$loki'];
-// 				return home;
-// 			})
-// 		);
-// 	}
-// }
