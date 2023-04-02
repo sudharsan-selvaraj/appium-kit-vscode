@@ -9,27 +9,46 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
-  "main": "./dist/extension.js",
   "activationevents": [
-    "**/*{appiumrc.json,appiumrc.yaml,appiumrc.yml,appiumrc,appium.conf.json,.appiumrc}"
+    "workspaceContains:**/*{appiumrc.json,appiumrc.yaml,appiumrc.yml,appiumrc,appium.conf.json,.appiumrc}"
   ],
+  "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "appium-activitybar",
+          "title": "Appium",
+          "icon": "media/logo.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "appium-panel",
+          "title": "Appium ToolBox",
+          "icon": "media/logo.svg"
+        }
+      ]
+    },
     "views": {
-      "appium": [
+      "explorer": [
+        {
+          "id": "appium.view.configFiles",
+          "type": "tree",
+          "name": "Appium Config Files",
+          "when": "appium.configured == true",
+          "initialSize": 0.5,
+          "visibility": "visible"
+        }
+      ],
+      "appium-panel": [],
+      "appium-activitybar": [
         {
           "id": "appium.view.environment",
           "type": "webview",
           "name": "Environment",
           "when": "appium.configured == true",
           "initialSize": 1
-        },
-        {
-          "id": "appium.view.configFiles",
-          "type": "tree",
-          "name": "Config Files",
-          "when": "appium.configured == true",
-          "initialSize": 0.5
         },
         {
           "id": "appium.view.extensions",
@@ -75,15 +94,6 @@
           "command": "appium.server.start",
           "when": "view == appium.view.configFiles && viewItem == config-file-valid",
           "group": "inline"
-        }
-      ]
-    },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "appium",
-          "title": "Appium",
-          "icon": "media/logo.svg"
         }
       ]
     },
@@ -181,6 +191,7 @@
     "lilconfig": "^2.1.0",
     "lodash": "^4.17.21",
     "lokijs": "^1.5.12",
+    "path-match": "^1.2.4",
     "semver": "^7.3.8",
     "teen_process": "^2.0.2",
     "uuid": "^9.0.0",
