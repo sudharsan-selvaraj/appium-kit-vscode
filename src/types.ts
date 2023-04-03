@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 export type Consumer<T> = (args: T) => void | Promise<void>;
 export interface AppiumHome {
   name: string;
@@ -10,6 +11,11 @@ export enum AppiumSource {
   workspace = 'workspace',
 }
 
+export enum ConfigDirectorSource {
+  global = 'global',
+  workspace = 'workspace',
+}
+
 export interface AppiumBinary {
   version: string;
   path: string;
@@ -17,6 +23,19 @@ export interface AppiumBinary {
   source: AppiumSource;
   isSupported: boolean;
   isActive?: boolean;
+}
+
+export interface ConfigDirectory {
+  name: ConfigDirectorSource;
+  uri: vscode.Uri;
+  pattern: vscode.GlobPattern;
+}
+
+export interface ConfigFile {
+  uri: vscode.Uri;
+  isValid: boolean;
+  config: Record<string, any>;
+  directory: ConfigDirectory['name'];
 }
 
 export interface AppiumExtension {

@@ -173,6 +173,7 @@
     "yml": "^1.0.0"
   },
   "dependencies": {
+    "@appium/base-driver": "^9.3.4",
     "@appium/support": "^3.1.8",
     "@bendera/vscode-webview-elements": "^0.12.0",
     "@types/get-port": "^4.2.0",

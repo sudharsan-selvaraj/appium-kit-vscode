@@ -5,13 +5,9 @@ import { APPIUM_CONF_FILE_GLOB, EXTENSIONS_FILES_RETAIVE_PATH } from '../../../c
 import { ViewProvider } from '../../view-provider';
 import { readConfigFile } from '../../../config-parser';
 import { VscodeWorkspace } from '../../../vscode/workspace';
-import {
-  ConfigDirectory,
-  ConfigDirectoryTreeItem,
-  ConfigFile,
-  ConfigFiletreeItem,
-} from './config-tree-tems';
+import { ConfigDirectoryTreeItem, ConfigFiletreeItem } from './config-tree-tems';
 import _ = require('lodash');
+import { ConfigDirectorSource, ConfigDirectory, ConfigFile } from '../../../types';
 
 const CONFIG_FILES_RELATIVE_PATH = path.join(EXTENSIONS_FILES_RETAIVE_PATH, 'config');
 
@@ -48,7 +44,7 @@ export class ConfigViewProvider
   private _initializeConfigDirectories(context: vscode.ExtensionContext) {
     if (this.workspace.isOpened()) {
       this._configDirectories.push({
-        name: 'workspace',
+        name: ConfigDirectorSource.workspace,
         uri: vscode.Uri.file(this.workspace.getRootDirectory()),
         pattern: APPIUM_CONF_FILE_GLOB,
       });
@@ -58,7 +54,7 @@ export class ConfigViewProvider
       fs.mkdirSync(globalConfDirPath, { recursive: true });
     }
     this._configDirectories.push({
-      name: 'global',
+      name: ConfigDirectorSource.global,
       uri: vscode.Uri.file(globalConfDirPath),
       pattern: new vscode.RelativePattern(globalConfDirPath, '*'),
     });

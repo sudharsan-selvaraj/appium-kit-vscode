@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { Command } from './command';
-import { ConfigFile } from '../views/treeview/config-files/config-tree-tems';
+import { ConfigFile } from '../types';
 
 export class DeleteAppiumConfigCommand extends Command {
   // eslint-disable-next-line @typescript-eslint/naming-convention

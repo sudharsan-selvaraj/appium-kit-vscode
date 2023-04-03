@@ -23,9 +23,9 @@ import { UpdateAppiumExtensionCommand } from './commands/update-appium-extension
 import { DataStore } from './db/data-store';
 import { initializeDb } from './db';
 import { DeleteAppiumHomeCommand } from './commands/delete-appium-home';
-import { AppiumServerView } from './views/webview/servers';
 import { CreateNewAppiumConfigCommand } from './commands/create-new-appium-config';
 import { DeleteAppiumConfigCommand } from './commands/delete-appium-config';
+import { StartAppiumServerCommand } from './commands/start-appium-server';
 
 let disposables: vscode.Disposable[] = [];
 
@@ -52,13 +52,13 @@ export async function activate(context: vscode.ExtensionContext) {
     new DeleteAppiumHomeCommand(eventBus, datastore),
     new CreateNewAppiumConfigCommand(),
     new DeleteAppiumConfigCommand(),
+    new StartAppiumServerCommand(eventBus, datastore),
   ]);
 
   const welcomeViewProvider = new WelcomeWebview(context, eventBus, datastore);
   const configViewProvider = new ConfigViewProvider(workspace);
   const environmentViewProvider = new AppiumEnvironmentWebView(context, eventBus, datastore);
   const appiumExtensionsView = new AppiumExtensionsWebView(context, eventBus, datastore);
-  const serverView = new AppiumServerView(datastore);
   // const inspector = new AppiumInspector();
 
   /* Initialize Views */
@@ -67,7 +67,6 @@ export async function activate(context: vscode.ExtensionContext) {
     await configViewProvider.register(APPIUM_CONFIG_FILE_VIEW, context),
     await environmentViewProvider.register(APPIUM_ENVIRONMENT_VIEW, context),
     await appiumExtensionsView.register(APPIUM_EXTENSIONS_VIEW, context),
-    await serverView.register('', context),
     // await inspector.register(APPIUM_EXTENSIONS_VIEW, context),
   ];
 

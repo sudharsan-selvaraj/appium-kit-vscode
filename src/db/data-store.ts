@@ -1,5 +1,5 @@
 import { DatabaseCollections } from '.';
-import { AppiumBinary, AppiumHome } from '../types';
+import { AppiumBinary, AppiumHome, ConfigFile } from '../types';
 import _ = require('lodash');
 import { diff } from 'semver';
 
@@ -67,6 +67,28 @@ export class DataStore {
     this.collections.appiumHome.chain().update((home) => {
       home.isActive = this._pathPredicate(home, activeHome);
     });
+  }
+
+  public getAppiumConfigs() {
+    this.collections.appiumConfig.find();
+  }
+
+  public resetAppiumConfigFiles(configList: ConfigFile[]) {
+    this.collections.appiumConfig.chain().find().remove();
+    this.collections.appiumConfig.insert(configList);
+  }
+
+  public addNewAppiumConfig(appiumConfig: ConfigFile) {
+    this.collections.appiumConfig.insert(appiumConfig);
+  }
+
+  public deleteAppiumConfig(appiumConfig: ConfigFile) {
+    this.collections.appiumConfig.remove(appiumConfig);
+  }
+
+  public updateAppiumConfig(appiumConfig: ConfigFile) {
+    this.collections.appiumConfig.remove(appiumConfig);
+    this.collections.appiumConfig.insert(appiumConfig);
   }
 
   private _pathPredicate(a: { path: string }, b: { path: string }): boolean {

@@ -1,6 +1,7 @@
-import { ChildProcess, spawn, SpawnOptions } from 'child_process';
+import { ChildProcess, fork, ForkOptions, spawn, SpawnOptions } from 'child_process';
 import * as vscode from 'vscode';
 import { EventEmitter } from 'events';
+import { SanitizedPtyEventEmitter } from './pty-sanitized-log-emitter';
 
 export interface PtyProcessHandler {
   onStarted?: (process: ChildProcess, teminal: vscode.Terminal) => void;
@@ -12,24 +13,15 @@ export interface PtyProcessHandler {
   onUserInput?: (input: string) => void;
 }
 
-class NormalizingEventEmitter extends vscode.EventEmitter<string> {
-  public fire(data: string) {
-    super.fire(data.replace(/\n/g, '\r\n'));
-  }
-
-  public log(data: string) {
-    this.fire(`${data}\r\n`);
-  }
-}
-
-export interface TerminalProcessOptions extends SpawnOptions {
+export interface TerminalProcessOptions extends SpawnOptions, ForkOptions {
   killOnTerminalClosed?: boolean;
   killOnUserInput?: boolean;
+  useFork?: boolean;
   args?: string[];
 }
 
 export class Pty extends EventEmitter implements vscode.Pseudoterminal {
-  private writeEmitter = new NormalizingEventEmitter();
+  private writeEmitter = new SanitizedPtyEventEmitter();
   public onDidWrite = this.writeEmitter.event;
   private process!: ChildProcess;
   private terminal!: vscode.Terminal;
@@ -45,7 +37,11 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
   }
 
   public open() {
-    this.process = spawn(this.cmd, this.options.args || [], this.options);
+    if (this.options.useFork) {
+      this.process = fork(this.cmd, this.options.args || [], this.options);
+    } else {
+      this.process = spawn(this.cmd, this.options.args || [], this.options);
+    }
 
     if (this.handler.onStarted) {
       this.handler.onStarted(this.process, this.terminal);
@@ -125,5 +121,9 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
 
   public revealterminal() {
     this.terminal?.show();
+  }
+
+  public getChildProcess() {
+    return this.process;
   }
 }

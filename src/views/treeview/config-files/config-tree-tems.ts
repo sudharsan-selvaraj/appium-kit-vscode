@@ -1,21 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ICON_DIRECTORY, ICON_INVALID, ICON_VALID } from '../../../icons';
-
-export type ConfigDirectorName = 'global' | 'workspace';
-
-export interface ConfigDirectory {
-  name: ConfigDirectorName;
-  uri: vscode.Uri;
-  pattern: vscode.GlobPattern;
-}
-
-export interface ConfigFile {
-  uri: vscode.Uri;
-  isValid: boolean;
-  config: any;
-  directory: ConfigDirectory['name'];
-}
+import { ConfigDirectory, ConfigFile } from '../../../types';
 
 export class ConfigFiletreeItem extends vscode.TreeItem {
   constructor(config: ConfigFile) {

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { Command } from './command';
-import { ConfigDirectory } from '../views/treeview/config-files/config-tree-tems';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import { ConfigDirectory } from '../types';
 
 const DEFAULT_CONFIG = {
   server: {

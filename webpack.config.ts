@@ -87,4 +87,42 @@ const extensionConfig = {
     }),
   ],
 };
-module.exports = [extensionConfig];
+
+const appiumServerConfig = {
+  target: 'node', // VS Code extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
+  mode: 'none',
+  entry: './src/http-server.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
+  output: {
+    // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'http-server.js',
+    libraryTarget: 'commonjs2',
+  },
+  resolve: {
+    // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
+    extensions: ['.ts', '.js'],
+  },
+  externals: {
+    vscode: 'commonjs vscode', // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
+    // modules added here also need to be added in the .vscodeignore file
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader',
+          },
+        ],
+      },
+    ],
+  },
+  plugins: [
+    new webpack.IgnorePlugin({
+      resourceRegExp: /spdx-(exceptions|license-ids)/,
+    }),
+  ],
+};
+module.exports = [extensionConfig, appiumServerConfig];
