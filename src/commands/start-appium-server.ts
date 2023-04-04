@@ -74,10 +74,10 @@ export class StartAppiumServerCommand extends Command {
 
     const launchOptions: AppiumLaunchOption = {
       appiumPort: port,
-      address: serverConfig.address || '127.0.0.1',
+      address: serverConfig.address || '0.0.0.0',
       appiumHome: <string>this.dataStore.getActiveAppiumHome()?.path,
       appiumModulePath: <string>this.dataStore.getActiveAppiumBinary()?.executable,
-      basePath: serverConfig.basePath || '/',
+      basePath: serverConfig['base-path'] || '/',
       configPath: configFile.uri.fsPath,
       proxyPort: proxyPort,
     };
@@ -113,7 +113,11 @@ export class StartAppiumServerCommand extends Command {
         },
       }
     );
-    const appiumServiceInstance = new AppiumServiceInstance(uuid(), pty, launchOptions);
+    const appiumServiceInstance = new AppiumServiceInstance(
+      launchOptions.appiumPort.toString(),
+      pty,
+      launchOptions
+    );
     pty.startProcess();
   }
 }

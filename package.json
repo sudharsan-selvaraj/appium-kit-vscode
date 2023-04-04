@@ -37,7 +37,13 @@
           "type": "tree",
           "name": "Appium Config Files",
           "when": "appium.configured == true",
-          "initialSize": 0.5,
+          "visibility": "visible"
+        },
+        {
+          "id": "appium.view.server",
+          "type": "tree",
+          "name": "Appium Servers",
+          "when": "appium.configured == true",
           "visibility": "visible"
         }
       ],
@@ -136,7 +142,7 @@
   "scripts": {
     "vscode:prepublish": "npm run package",
     "compile": "webpack",
-    "watch": "webpack --watch",
+    "watch": "echo $ANDROID_HOME && webpack --watch",
     "package": "webpack --mode production --devtool hidden-source-map",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",

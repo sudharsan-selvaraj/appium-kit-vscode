@@ -15,16 +15,41 @@ export class AppiumServiceInstance {
   private _sessions: Map<string, any> = new Map();
   private _listeners: AppiumServerListener[] = [];
   private _process!: ChildProcess;
+  private running: boolean = false;
 
   constructor(private id: string, private pty: Pty, private launchOption: AppiumLaunchOption) {}
 
   ready() {
+    this.running = true;
     this._process = this.pty.getChildProcess();
     this._process.on('message', this._messageHandler.bind(this));
+    this._process.on('exit', () => {
+      this.running = false;
+      this._sessions.forEach((session) => session.setIsRunning(false));
+      this.emitRefresh();
+    });
+  }
+
+  getId() {
+    return this.id;
+  }
+
+  getAddress() {
+    return `${this.launchOption.address === '0.0.0.0' ? '127.0.0.1' : this.launchOption.address}:${
+      this.launchOption.appiumPort
+    }${this.launchOption.basePath === '/' ? '' : this.launchOption.basePath}`;
+  }
+
+  isRunning() {
+    return this.running;
   }
 
   addListener(listener: AppiumServerListener) {
     this._listeners.push(listener);
+  }
+
+  getSessions() {
+    return [...this._sessions.values()];
   }
 
   private _messageHandler(message: AppiumIpcMessage<any>) {
@@ -43,7 +68,11 @@ export class AppiumServiceInstance {
       needsRefresh = true;
     }
     if (needsRefresh) {
-      this._listeners.forEach((l) => l.onNeedsRefresh && l.onNeedsRefresh(this.id));
+      this.emitRefresh();
     }
+  }
+
+  private emitRefresh() {
+    this._listeners.forEach((l) => l.onNeedsRefresh && l.onNeedsRefresh(this.id));
   }
 }

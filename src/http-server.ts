@@ -7,7 +7,7 @@ import { AppiumIpcEvent, AppiumIpcMessage } from './appium-ipc-event';
 export interface AppiumLaunchOption {
   appiumPort: number;
   proxyPort: number;
-  address: number;
+  address: string;
   configPath: string;
   appiumHome: string;
   appiumModulePath: string;
@@ -68,8 +68,14 @@ const parseCliOptions = (args: Array<string>): AppiumLaunchOption => {
   return yargs(args).parse() as any;
 };
 
-const hasBody = (request: http.IncomingMessage) => {
-  return !!request?.method && new RegExp(/post|put|patch/g).test(request?.method?.toLowerCase());
+const isCreateSessionCommand = (method: string, path: string) => {
+  return method.toLowerCase() === 'post' && path.endsWith('session');
+};
+
+const isDeleteCommand = (method: string, path: string) => {
+  return (
+    method.toLowerCase() === 'delete' && path.endsWith(`session/${getSessionIdFromUrl(path || '')}`)
+  );
 };
 
 const pathRequestBody = (
@@ -138,10 +144,11 @@ const responseInterceptor = (
 
 function startServer() {
   let options = parseCliOptions(process.argv.slice(2));
+  const appiumUrl = ` http://127.0.0.1:${options.proxyPort}`;
 
   const proxy = httpProxy
     .createProxy({
-      target: `http://127.0.0.1:${options.proxyPort}`,
+      target: appiumUrl,
       ws: true,
     })
     .on('proxyReq', pathRequestBody)
@@ -156,28 +163,34 @@ function startServer() {
         ) => {
           const pathName = <string>request.url || '';
           const method = request.method;
+
           if (method && pathName.startsWith(options.basePath)) {
-            if (
-              method.toLowerCase() === 'post' &&
-              pathName.startsWith(options.basePath) &&
-              pathName.endsWith('session')
-            ) {
+            const responseObj = JSON.parse(responseBody || '{}');
+            const isError = !!responseObj.error;
+
+            if (isCreateSessionCommand(method, pathName) && !isError) {
               sendMessage({
                 event: 'session-started',
-                // data: JSON.parse(responseBody || '{}'),
-                data: { sessionId: '123', capabilities: {} },
+                data: responseObj,
               });
-            } else if (method.toLowerCase() === 'delete' && getSessionIdFromUrl(pathName || '')) {
+            } else if (isDeleteCommand(method, pathName) && !isError) {
               sendMessage({
                 event: 'session-stopped',
                 data: {
                   sessionId: getSessionIdFromUrl(pathName || ''),
                 },
               });
-            } else {
             }
+            // else {
+            //   sendMessage({
+            //     event: 'session-command',
+            //     data: {
+            //       response: responseObj,
+            //       url: appiumUrl + pathName,
+            //     },
+            //   });
+            // }
           }
-          console.log(!!responseBody ? JSON.parse(responseBody) : null);
         }
       )
     );
