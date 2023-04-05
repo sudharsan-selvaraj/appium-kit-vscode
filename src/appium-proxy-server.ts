@@ -165,7 +165,7 @@ function startServer() {
 
           if (method && pathName.startsWith(options.basePath)) {
             const responseObj = JSON.parse(responseBody || '{}');
-            const isError = !!responseObj.error;
+            const isError = responseObj.value && !!responseObj.value.error;
 
             if (isCreateSessionCommand(method, pathName) && !isError) {
               sendMessage({
@@ -210,6 +210,11 @@ function startServer() {
   server.listen(options.appiumPort, async () => {
     await startAppium(options);
   });
+  server.on('error', function (e) {
+    // Handle your error here
+    console.error(e);
+  });
+
   process.on('exit', () => {
     server.close();
   });

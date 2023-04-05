@@ -32,11 +32,11 @@
     "Other"
   ],
   "publisher": "sudharsan-selvaraj",
-  "activationevents": [
+  "main": "./dist/extension.js",
+  "activationEvents": [
     "workspaceContains:**/*{appiumrc.json,appiumrc.yaml,appiumrc.yml,appiumrc,appium.conf.json,.appiumrc}"
   ],
-  "main": "./dist/extension.js",
-  "icon": "https://github.com/sudharsan-selvaraj/appium-kit-vscode/blob/main/media/appium-logo.png",
+  "icon": "media/appium-logo.png",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -68,7 +68,7 @@
           "type": "tree",
           "name": "Appium Servers",
           "when": "appium.configured == true",
-          "visibility": "visible"
+          "visibility": "collapsed"
         }
       ],
       "appium-panel": [],
