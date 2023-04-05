@@ -1,19 +1,42 @@
 {
-  "name": "appium-vscode",
-  "displayName": "appium-vscode",
-  "description": "",
+  "name": "appium-kit-vscode",
+  "displayName": "Appium Kit",
+  "description": "The only tool you need to manage appium ecosystem",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.76.0"
   },
+  "keywords": [
+    "appium",
+    "mobile",
+    "xcuitest",
+    "espresso",
+    "android",
+    "ios",
+    "testing",
+    "automation"
+  ],
+  "homepage": "https://github.com/sudharsan-selvaraj/appium-kit-vscode/",
+  "bugs": {
+    "url": "https://github.com/sudharsan-selvaraj/appium-kit-vscode//issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sudharsan-selvaraj/appium-kit-vscode/"
+  },
+  "author": {
+    "name": "Sudharsan Selvaraj",
+    "email": "sudharsanselvaraj.c@gmail.com"
+  },
   "categories": [
     "Other"
   ],
+  "publisher": "sudharsan-selvaraj",
   "activationevents": [
     "workspaceContains:**/*{appiumrc.json,appiumrc.yaml,appiumrc.yml,appiumrc,appium.conf.json,.appiumrc}"
   ],
   "main": "./dist/extension.js",
-  "icon": "media/appium-logo.png",
+  "icon": "https://github.com/sudharsan-selvaraj/appium-kit-vscode/blob/main/media/appium-logo.png",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
