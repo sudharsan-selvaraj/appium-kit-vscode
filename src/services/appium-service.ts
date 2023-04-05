@@ -2,7 +2,7 @@ import { ChildProcess } from 'child_process';
 import { AppiumLaunchOption } from '../appium-proxy-server';
 import { Pty } from '../pty';
 import { AppiumIpcMessage } from '../appium-ipc-event';
-import { AppiumSession } from '../appium-session';
+import { AppiumSession } from '../models/appium-session';
 // const { routeToCommandName } = require('@appium/base-driver');
 
 export interface AppiumServerListener {

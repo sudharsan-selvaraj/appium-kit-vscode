@@ -1,4 +1,4 @@
-import { ExtensionCommand } from '../interfaces/extension-command';
+import { ExtensionCommand } from '../models/extension-command';
 
 export abstract class Command implements ExtensionCommand {
   constructor(private name: string) {}

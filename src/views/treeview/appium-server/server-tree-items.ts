@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AppiumServiceInstance } from '../../../services/appium-service';
 import { ICON_BASH_TERMINAL, ICON_LOADING, ICON_TICK } from '../../../icons';
-import { AppiumSession } from '../../../appium-session';
+import { AppiumSession } from '../../../models/appium-session';
 
 export class AppiumSessionTreeItem extends vscode.TreeItem {
   constructor(private session: AppiumSession) {

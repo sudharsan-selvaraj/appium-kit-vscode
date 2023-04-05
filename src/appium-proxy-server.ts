@@ -96,11 +96,10 @@ const pathRequestBody = (
 };
 
 const startAppium = async (options: AppiumLaunchOption) => {
-  /* new comment */
   console.log(`* Starting appium server with appium home ${options.appiumHome}`);
   const { main: appium } = dynamicRequire(options.appiumModulePath);
   try {
-    console.log(`> node ${options.appiumModulePath} --config ${options.configPath}`);
+    console.log(`\n> node ${options.appiumModulePath} --config ${options.configPath}`);
     const appiumServer = await appium({
       port: options.proxyPort,
       appiumHome: options.appiumHome,

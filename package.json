@@ -13,6 +13,7 @@
     "workspaceContains:**/*{appiumrc.json,appiumrc.yaml,appiumrc.yml,appiumrc,appium.conf.json,.appiumrc}"
   ],
   "main": "./dist/extension.js",
+  "icon": "media/appium-logo.png",
   "contributes": {
     "viewsContainers": {
       "activitybar": [

@@ -1,7 +1,7 @@
 import { ChildProcess, fork, ForkOptions, spawn, SpawnOptions } from 'child_process';
 import * as vscode from 'vscode';
 import { EventEmitter } from 'events';
-import { SanitizedPtyEventEmitter } from './pty-sanitized-log-emitter';
+import { SanitizedPtyEventEmitter } from './sanitized-log-emitter';
 
 export interface PtyProcessHandler {
   onStarted?: (process: ChildProcess, teminal: vscode.Terminal) => void;

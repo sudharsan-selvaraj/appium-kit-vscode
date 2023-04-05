@@ -3,10 +3,9 @@ import { ViewProvider } from '../../view-provider';
 import { EventBus } from '../../../events/event-bus';
 import { AppiumServiceInstance } from '../../../services/appium-service';
 import { AppiumServerStartedEvent } from '../../../events/appium-server-started-event';
-import { AppiumSession } from '../../../appium-session';
-import { AppiumSessionLog } from '../../../interfaces/appium-session-log';
+import { AppiumSession } from '../../../models/appium-session';
+import { AppiumSessionLog } from '../../../models/appium-session-log';
 import { AppiumServerTreeItem, AppiumSessionTreeItem } from './server-tree-items';
-import { server } from '@appium/base-driver';
 
 type AppiumServerTreeItemtypes = AppiumServiceInstance | AppiumSession | AppiumSessionLog;
 

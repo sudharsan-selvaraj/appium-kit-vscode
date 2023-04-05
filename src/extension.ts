@@ -62,7 +62,6 @@ export async function activate(context: vscode.ExtensionContext) {
   const environmentViewProvider = new AppiumEnvironmentWebView(context, eventBus, datastore);
   const appiumExtensionsView = new AppiumExtensionsWebView(context, eventBus, datastore);
   const serverView = new AppiumServerProviderView(eventBus);
-  // const inspector = new AppiumInspector();
 
   /* Initialize Views */
   disposables = [
@@ -71,7 +70,6 @@ export async function activate(context: vscode.ExtensionContext) {
     await environmentViewProvider.register(APPIUM_ENVIRONMENT_VIEW, context),
     await appiumExtensionsView.register(APPIUM_EXTENSIONS_VIEW, context),
     await serverView.register(APPIUM_SERVER_VIEW, context),
-    // await inspector.register(APPIUM_EXTENSIONS_VIEW, context),
   ];
 
   await appiumEnvironmentService.initialize();

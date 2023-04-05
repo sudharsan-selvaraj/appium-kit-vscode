@@ -1,4 +1,4 @@
-import { AppiumSessionLog } from './interfaces/appium-session-log';
+import { AppiumSessionLog } from './appium-session-log';
 
 export class AppiumSession {
   private logs: AppiumSessionLog[] = [];

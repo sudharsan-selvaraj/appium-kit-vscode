@@ -1,4 +1,4 @@
-import { ExtensionCommand } from '../interfaces/extension-command';
+import { ExtensionCommand } from '../models/extension-command';
 import * as vscode from 'vscode';
 
 export class CommandManager {
