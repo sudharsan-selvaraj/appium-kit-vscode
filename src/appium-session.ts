@@ -3,6 +3,7 @@ import { AppiumSessionLog } from './interfaces/appium-session-log';
 export class AppiumSession {
   private logs: AppiumSessionLog[] = [];
   private startTime: Date;
+  private endTime!: Date;
   private _running = true;
 
   constructor(
@@ -33,8 +34,16 @@ export class AppiumSession {
     return this.startTime;
   }
 
+  public getEndTime() {
+    return this.endTime;
+  }
+
   public setIsRunning(status: boolean) {
     this._running = status;
+  }
+
+  public setEndTime(endTime: Date) {
+    this.endTime = endTime;
   }
 
   public addLog(log: AppiumSessionLog) {

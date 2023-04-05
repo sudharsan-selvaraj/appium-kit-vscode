@@ -20,6 +20,11 @@ export interface TerminalProcessOptions extends SpawnOptions, ForkOptions {
   args?: string[];
 }
 
+enum ExitKeyCodes {
+  cmdC = '\x03',
+  cmdD = '\x04',
+}
+
 export class Pty extends EventEmitter implements vscode.Pseudoterminal {
   private writeEmitter = new SanitizedPtyEventEmitter();
   public onDidWrite = this.writeEmitter.event;
@@ -75,6 +80,7 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
       if (this.handler.onComplete) {
         this.handler.onComplete();
       }
+      this.writeEmitter.fire('\n* Process stopped..\n');
       this.processCompleted = true;
     });
   }
@@ -82,6 +88,14 @@ export class Pty extends EventEmitter implements vscode.Pseudoterminal {
   public handleInput(data: string): void {
     if (this.handler.onUserInput) {
       this.handler.onUserInput(data);
+    }
+    this.writeEmitter.fire(data);
+    if (
+      this.options.killOnUserInput &&
+      !this.processCompleted &&
+      (data === ExitKeyCodes.cmdC || data === ExitKeyCodes.cmdD)
+    ) {
+      this.stop();
     }
   }
 

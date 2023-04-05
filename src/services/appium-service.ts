@@ -1,5 +1,5 @@
 import { ChildProcess } from 'child_process';
-import { AppiumLaunchOption } from '../http-server';
+import { AppiumLaunchOption } from '../appium-proxy-server';
 import { Pty } from '../pty';
 import { AppiumIpcMessage } from '../appium-ipc-event';
 import { AppiumSession } from '../appium-session';
@@ -12,7 +12,7 @@ export interface AppiumServerListener {
 }
 
 export class AppiumServiceInstance {
-  private _sessions: Map<string, any> = new Map();
+  private _sessions: Map<string, AppiumSession> = new Map();
   private _listeners: AppiumServerListener[] = [];
   private _process!: ChildProcess;
   private running: boolean = false;
@@ -63,6 +63,7 @@ export class AppiumServiceInstance {
     } else if (event === 'session-stopped') {
       const session = this._sessions.get(data.sessionId);
       session?.setIsRunning(false);
+      session?.setEndTime(new Date());
       needsRefresh = true;
     } else {
       needsRefresh = true;

@@ -22,28 +22,21 @@ export class AppiumSessionTreeItem extends vscode.TreeItem {
   }
 
   private getTimeDiff() {
-    var seconds = Math.floor((new Date().getTime() - this.session.getStartTime().getTime()) / 1000);
-    var interval = Math.floor(seconds / 31536000);
-    if (interval > 1) {
-      return interval + ' years';
-    }
-    interval = Math.floor(seconds / 2592000);
-    if (interval > 1) {
-      return interval + ' months';
-    }
-    interval = Math.floor(seconds / 86400);
-    if (interval > 1) {
-      return interval + ' days';
-    }
-    interval = Math.floor(seconds / 3600);
-    if (interval > 1) {
-      return interval + ' hours';
-    }
-    interval = Math.floor(seconds / 60);
-    if (interval > 1) {
-      return interval + ' minutes';
-    }
-    return Math.floor(seconds) + ' seconds';
+    const startTime = this.session.getStartTime();
+    const endTime = this.session.getEndTime() || new Date();
+    var seconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+
+    const time = {
+      d: Math.floor(seconds / 86400),
+      h: Math.floor(seconds / 3600) % 24,
+      m: Math.floor(seconds / 60) % 60,
+      s: seconds % 60,
+    };
+
+    return Object.entries(time)
+      .filter((val) => val[1] !== 0)
+      .map((val) => val[1] + val[0])
+      .join(' ');
   }
 }
 

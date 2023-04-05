@@ -5,15 +5,14 @@ import { EventBus } from '../events/event-bus';
 import { DataStore } from '../db/data-store';
 import { findFreePort, isPortFree } from '../utils/net';
 import _ = require('lodash');
-import { AppiumLaunchOption } from '../http-server';
+import { AppiumLaunchOption } from '../appium-proxy-server';
 import { Pty } from '../pty';
 import path = require('path');
 import { AppiumServiceInstance } from '../services/appium-service';
-import { v4 as uuid } from 'uuid';
 import { AppiumServerStartedEvent } from '../events/appium-server-started-event';
 
 const DEFAULT_APPIUM_PORT = 4723;
-const APPIUM_SERVER_PROCESS = 'http-server.js';
+const APPIUM_SERVER_PROCESS = 'appium-proxy-server.js';
 
 export interface StartAppiumServerOptions {
   configFile: ConfigFile;
@@ -53,7 +52,7 @@ export class StartAppiumServerCommand extends Command {
       return portFromConfig;
     } else {
       const newPort = await vscode.window.showInputBox({
-        title: 'The port in the config is busy. Please enter a different port',
+        title: `The port ${portFromConfig} in the config is busy. Please enter a different port`,
         validateInput: async (value) => {
           if (!new RegExp(/^\d+$/).test(value)) {
             return 'Not a valid port';

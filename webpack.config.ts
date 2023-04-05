@@ -91,11 +91,11 @@ const extensionConfig = {
 const appiumServerConfig = {
   target: 'node', // VS Code extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
   mode: 'none',
-  entry: './src/http-server.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
+  entry: './src/appium-proxy-server.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
   output: {
     // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
     path: path.resolve(__dirname, 'dist'),
-    filename: 'http-server.js',
+    filename: 'appium-proxy-server.js',
     libraryTarget: 'commonjs2',
   },
   resolve: {
