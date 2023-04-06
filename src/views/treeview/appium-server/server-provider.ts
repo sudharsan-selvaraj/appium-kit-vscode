@@ -5,7 +5,11 @@ import { AppiumServiceInstance } from '../../../services/appium-service';
 import { AppiumServerStartedEvent } from '../../../events/appium-server-started-event';
 import { AppiumSession } from '../../../models/appium-session';
 import { AppiumSessionLog } from '../../../models/appium-session-log';
-import { AppiumServerTreeItem, AppiumSessionTreeItem } from './server-tree-items';
+import {
+  AppiumServerTreeItem,
+  AppiumSessionLogTreeItem,
+  AppiumSessionTreeItem,
+} from './server-tree-items';
 
 type AppiumServerTreeItemtypes = AppiumServiceInstance | AppiumSession | AppiumSessionLog;
 
@@ -76,7 +80,7 @@ export class AppiumServerProviderView
     } else if (element instanceof AppiumSession) {
       return new AppiumSessionTreeItem(element);
     } else {
-      return new vscode.TreeItem('');
+      return new AppiumSessionLogTreeItem(element as AppiumSessionLog);
     }
   }
 }

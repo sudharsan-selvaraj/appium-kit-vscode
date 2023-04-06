@@ -38,6 +38,10 @@ export class AppiumSession {
     return this.endTime;
   }
 
+  public getCapability(key: string) {
+    return this.capabilities[key]
+  }
+
   public setIsRunning(status: boolean) {
     this._running = status;
   }

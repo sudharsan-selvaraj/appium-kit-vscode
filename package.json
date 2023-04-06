@@ -124,6 +124,11 @@
           "command": "appium.server.start",
           "when": "view == appium.view.configFiles && viewItem == config-file-valid",
           "group": "inline"
+        },
+        {
+          "command": "appium.session.view",
+          "when": "view == appium.view.server && viewItem == appium-session-running",
+          "group": "inline"
         }
       ]
     },
@@ -151,6 +156,12 @@
         "category": "Appium",
         "title": "Delete config file",
         "icon": "$(trash)"
+      },
+      {
+        "command": "appium.session.view",
+        "title": "View session Details",
+        "category": "Appium",
+        "icon": "$(device-camera-video)"
       }
     ],
     "configuration": {
@@ -224,6 +235,9 @@
     "lokijs": "^1.5.12",
     "path-match": "^1.2.4",
     "semver": "^7.3.8",
+    "spdx-exceptions": "^2.3.0",
+    "spdx-expression-parse": "^3.0.1",
+    "spdx-license-ids": "^3.0.13",
     "teen_process": "^2.0.2",
     "uuid": "^9.0.0",
     "which": "^3.0.0",

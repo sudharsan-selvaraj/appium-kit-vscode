@@ -54,7 +54,7 @@ const extensionConfig = {
   },
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.js', '.json'],
     alias: {
       handlebars: path.resolve(__dirname, 'node_modules', 'handlebars', 'dist', 'handlebars.js'),
     },
@@ -79,9 +79,9 @@ const extensionConfig = {
   },
   plugins: [
     copyNodeModulesFiles(),
-    new webpack.IgnorePlugin({
-      resourceRegExp: /spdx-(exceptions|license-ids)/,
-    }),
+    // new webpack.IgnorePlugin({
+    //   resourceRegExp: /spdx-(exceptions|license-ids)/,
+    // }),
     new webpack.WatchIgnorePlugin({
       paths: [path.resolve(__dirname, 'dist')],
     }),
@@ -100,7 +100,7 @@ const appiumServerConfig = {
   },
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.js', '.json'],
   },
   externals: {
     vscode: 'commonjs vscode', // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/

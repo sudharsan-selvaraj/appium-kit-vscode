@@ -28,6 +28,7 @@ import { CreateNewAppiumConfigCommand } from './commands/create-new-appium-confi
 import { DeleteAppiumConfigCommand } from './commands/delete-appium-config';
 import { StartAppiumServerCommand } from './commands/start-appium-server';
 import { AppiumServerProviderView } from './views/treeview/appium-server/server-provider';
+import { OpenSessionDetailsCommand } from './commands/open-session-details';
 
 let disposables: vscode.Disposable[] = [];
 
@@ -55,6 +56,7 @@ export async function activate(context: vscode.ExtensionContext) {
     new CreateNewAppiumConfigCommand(),
     new DeleteAppiumConfigCommand(),
     new StartAppiumServerCommand(eventBus, datastore),
+    new OpenSessionDetailsCommand(),
   ]);
 
   const welcomeViewProvider = new WelcomeWebview(context, eventBus, datastore);

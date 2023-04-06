@@ -7,3 +7,4 @@ export const ICON_DIRECTORY = new ThemeIcon('folder');
 export const ICON_BASH_TERMINAL = new ThemeIcon('terminal-bash');
 export const ICON_LOADING = new ThemeIcon('loading~spin');
 export const ICON_TICK = new ThemeIcon('notebook-state-success');
+export const ICON_ERROR = new ThemeIcon('notebook-state-error');

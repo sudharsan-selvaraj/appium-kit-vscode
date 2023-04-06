@@ -3,7 +3,7 @@ import { AppiumLaunchOption } from '../appium-proxy-server';
 import { Pty } from '../pty';
 import { AppiumIpcMessage } from '../appium-ipc-event';
 import { AppiumSession } from '../models/appium-session';
-// const { routeToCommandName } = require('@appium/base-driver');
+import { getCommandLog } from '../appium-command-parser';
 
 export interface AppiumServerListener {
   onStarted?: (serverId: string) => void;
@@ -66,7 +66,18 @@ export class AppiumServiceInstance {
       session?.setEndTime(new Date());
       needsRefresh = true;
     } else {
-      needsRefresh = true;
+      const session = this._sessions.get(data.sessionId);
+      if (session) {
+        const log = getCommandLog(
+          data.path,
+          this.launchOption.basePath,
+          data.method,
+          data.response
+        );
+        log.sessionId = session.getSessionId();
+        session.addLog(log);
+        needsRefresh = true;
+      }
     }
     if (needsRefresh) {
       this.emitRefresh();

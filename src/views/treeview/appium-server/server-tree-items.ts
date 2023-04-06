@@ -1,11 +1,21 @@
 import * as vscode from 'vscode';
 import { AppiumServiceInstance } from '../../../services/appium-service';
-import { ICON_BASH_TERMINAL, ICON_LOADING, ICON_TICK } from '../../../icons';
+import { ICON_BASH_TERMINAL, ICON_ERROR, ICON_LOADING, ICON_TICK } from '../../../icons';
 import { AppiumSession } from '../../../models/appium-session';
+import { AppiumSessionLog } from '../../../models/appium-session-log';
+
+export class AppiumSessionLogTreeItem extends vscode.TreeItem {
+  constructor(private log: AppiumSessionLog) {
+    super({ label: log.commandName }, vscode.TreeItemCollapsibleState.None);
+
+    this.iconPath = log.isSuccess ? ICON_TICK : ICON_ERROR;
+    this.description = log.description;
+  }
+}
 
 export class AppiumSessionTreeItem extends vscode.TreeItem {
   constructor(private session: AppiumSession) {
-    super({ label: session.getSessionId() }, vscode.TreeItemCollapsibleState.None);
+    super({ label: session.getSessionId() }, vscode.TreeItemCollapsibleState.Collapsed);
 
     this.iconPath = session.isRunning() ? ICON_LOADING : ICON_TICK;
     this.description = this._getDescription();

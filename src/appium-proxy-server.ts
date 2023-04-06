@@ -2,8 +2,8 @@ import * as http from 'http';
 import * as httpProxy from 'http-proxy';
 import * as bodyparser from 'body-parser';
 import * as yargs from 'yargs';
-import { AppiumIpcEvent, AppiumIpcMessage } from './appium-ipc-event';
-
+import { AppiumIpcMessage } from './appium-ipc-event';
+import getPort from 'get-port';
 export interface AppiumLaunchOption {
   appiumPort: number;
   proxyPort: number;
@@ -78,7 +78,7 @@ const isDeleteCommand = (method: string, path: string) => {
   );
 };
 
-const pathRequestBody = (
+const patchRequestBody = (
   proxyRequest: http.ClientRequest,
   request: http.IncomingMessage & { body?: any },
   response: http.ServerResponse
@@ -141,7 +141,7 @@ const responseInterceptor = (
   };
 };
 
-function startServer() {
+async function startServer() {
   let options = parseCliOptions(process.argv.slice(2));
   const appiumUrl = ` http://127.0.0.1:${options.proxyPort}`;
 
@@ -150,7 +150,7 @@ function startServer() {
       target: appiumUrl,
       ws: true,
     })
-    .on('proxyReq', pathRequestBody)
+    .on('proxyReq', patchRequestBody)
     .on(
       'proxyRes',
       responseInterceptor(
@@ -179,26 +179,48 @@ function startServer() {
                   sessionId: getSessionIdFromUrl(pathName || ''),
                 },
               });
+            } else {
+              sendMessage({
+                event: 'session-command',
+                data: {
+                  sessionId: getSessionIdFromUrl(pathName || ''),
+                  response: responseObj,
+                  url: appiumUrl + pathName,
+                  path: pathName,
+                  method: method,
+                },
+              });
             }
-            // else {
-            //   sendMessage({
-            //     event: 'session-command',
-            //     data: {
-            //       response: responseObj,
-            //       url: appiumUrl + pathName,
-            //     },
-            //   });
-            // }
           }
         }
       )
     );
 
+  await startAppium(options);
+
   const server = http.createServer(
     (request: http.IncomingMessage, response: http.ServerResponse) => {
       bodyparser.json()(request, response, () => {
-        console.log('Incomming request');
-        proxy.web(request, response);
+        if (isCreateSessionCommand(request?.method as string, request?.url as string)) {
+          const capabilities = (request as any).body.capabilities;
+          const mjpegServerPort = Object.assign(
+            {},
+            capabilities['alwaysMatch'],
+            (capabilities['firstMatch'] || [])[0] || {}
+          )['appium:mjpegServerport'];
+          if (!mjpegServerPort) {
+            getPort().then((port) => {
+              (request as any).body.capabilities.alwaysMatch['appium:mjpegServerPort'] = 5556;
+              console.log(
+                'MjpegServerPort is ' +
+                  (request as any).body.capabilities.alwaysMatch['appium:mjpegServerPort']
+              );
+              proxy.web(request, response);
+            });
+          }
+        } else {
+          proxy.web(request, response);
+        }
       });
     }
   );
@@ -207,9 +229,7 @@ function startServer() {
     proxy.ws(req, socket, head);
   });
 
-  server.listen(options.appiumPort, async () => {
-    await startAppium(options);
-  });
+  server.listen(options.appiumPort);
   server.on('error', function (e) {
     // Handle your error here
     console.error(e);
