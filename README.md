@@ -8,7 +8,6 @@
 </div>
 <br />
 
-
 Welcome to AppiumKit, a Visual Studio Code extension that allows you to manage your Appium ecosystem directly from within the editor. With this extension, you can easily switch between multiple versions of Appium, manage Appium home, install, update and delete plugins and drivers, start Appium servers, and monitor sessions and live video directly from within the editor.
 
 ## Installation
@@ -54,7 +53,7 @@ To use AppiumKit, follow these steps:
 
 ## Contributing
 
-If you encounter any issues with AppiumKit, or would like to contribute to its development, please visit the [GitHub repository](https://github.com/sudharsan-selvaraj/appium-kit-vscode) for this project. There, you can view the source code, report issues, and submit pull requests. 
+If you encounter any issues with AppiumKit, or would like to contribute to its development, please visit the [GitHub repository](https://github.com/sudharsan-selvaraj/appium-kit-vscode) for this project. There, you can view the source code, report issues, and submit pull requests.
 
 ## License
 
