@@ -15,8 +15,8 @@ Welcome to AppiumKit, a Visual Studio Code extension that allows you to manage y
 To install the AppiumKit extension, follow these steps:
 
 1. Launch Visual Studio Code
-2. Click on the Extensions icon in the left-hand sidebar (or press `Ctrl+Shift+X`)
-3. Search for "AppiumKit"
+2. Click on the Extensions icon in the left-hand sidebar (or press `Ctrl+Shift+X` in windows and `Cmd+Shift+X` in Mac)
+3. Search for "Appium Kit"
 4. Click "Install"
 5. Once the installation is complete, click "Reload" to activate the extension
 
