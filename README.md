@@ -1,4 +1,4 @@
-<h1 align="center">AppiumKit</h1>
+<h1 align="center"><img src="./media/appium-logo.png" height="40px" width="60px"/>AppiumKit</h1>
 <div align="center">
   <strong> Effortlessly manage your Appium ecosystem from within Visual Studio Code. </strong>  
 </div>
