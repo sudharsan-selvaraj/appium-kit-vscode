@@ -95,6 +95,29 @@ const patchRequestBody = (
   }
 };
 
+const addMjepgPortTorequest = (
+  request: http.IncomingMessage,
+  response: http.ServerResponse,
+  next: any
+) => {
+  if (isCreateSessionCommand(request?.method as string, request?.url as string)) {
+    const capabilities = (request as any).body.capabilities;
+    const mjpegServerPort = Object.assign(
+      {},
+      capabilities['alwaysMatch'],
+      (capabilities['firstMatch'] || [])[0] || {}
+    )['appium:mjpegServerport'];
+    if (!mjpegServerPort) {
+      getPort().then((port) => {
+        (request as any).body.capabilities.alwaysMatch['appium:mjpegServerPort'] = port;
+        next();
+      });
+    }
+  } else {
+    next();
+  }
+};
+
 const startAppium = async (options: AppiumLaunchOption) => {
   console.log(`* Starting appium server with appium home ${options.appiumHome}`);
   const { main: appium } = dynamicRequire(options.appiumModulePath);
@@ -201,26 +224,9 @@ async function startServer() {
   const server = http.createServer(
     (request: http.IncomingMessage, response: http.ServerResponse) => {
       bodyparser.json()(request, response, () => {
-        if (isCreateSessionCommand(request?.method as string, request?.url as string)) {
-          const capabilities = (request as any).body.capabilities;
-          const mjpegServerPort = Object.assign(
-            {},
-            capabilities['alwaysMatch'],
-            (capabilities['firstMatch'] || [])[0] || {}
-          )['appium:mjpegServerport'];
-          if (!mjpegServerPort) {
-            getPort().then((port) => {
-              (request as any).body.capabilities.alwaysMatch['appium:mjpegServerPort'] = 5556;
-              console.log(
-                'MjpegServerPort is ' +
-                  (request as any).body.capabilities.alwaysMatch['appium:mjpegServerPort']
-              );
-              proxy.web(request, response);
-            });
-          }
-        } else {
+        addMjepgPortTorequest(request, response, () => {
           proxy.web(request, response);
-        }
+        });
       });
     }
   );

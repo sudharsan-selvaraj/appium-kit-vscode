@@ -107,9 +107,6 @@ export class StartAppiumServerCommand extends Command {
           return data.toString();
         },
         onStdErr: (error) => {
-          if (!appiumServiceInstance.isRunning()) {
-            pty.close();
-          }
           return error.toString();
         },
       }

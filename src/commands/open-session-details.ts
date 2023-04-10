@@ -26,7 +26,7 @@ export class OpenSessionDetailsCommand extends Command {
       );
     }
 
-    const panel = vscode.window.createWebviewPanel('Webview', 'Appium', vscode.ViewColumn.One);
+    const panel = vscode.window.createWebviewPanel('Webview', `Appium - ${option.session.getSessionId()} `, vscode.ViewColumn.One);
     panel.webview.options = {
       enableScripts: true,
     };
